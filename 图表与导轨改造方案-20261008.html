@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StockSentry · 股票图形与导轨改造方案</title>
+<style>
+  :root{
+    --ink:#16181d; --ink2:#4a4f5a; --ink3:#828a97;
+    --line:#e3e6ec; --line2:#f0f2f6;
+    --bg:#f6f7f9; --card:#ffffff;
+    --accent:#1f5fa8; --accent-bg:#eef4fb;
+    --ok:#1e6b3f; --ok-bg:#eaf5ee;
+    --warn:#a35b00; --warn-bg:#fdf5e6;
+    --bad:#a3272b; --bad-bg:#fdeeee;
+    --purple:#534AB7; --purple-bg:#efedfb;
+    --up:#c0392b; --down:#1e8449;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:14px;line-height:1.72;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1120px;margin:0 auto;padding:36px 24px 72px;}
+  header{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:32px 34px;margin-bottom:22px;}
+  header h1{margin:0 0 10px;font-size:24px;font-weight:600;letter-spacing:-.2px;}
+  header .sub{color:var(--ink2);font-size:14px;margin-bottom:16px;}
+  header .meta{color:var(--ink3);font-size:12.5px;border-top:1px solid var(--line2);padding-top:14px;line-height:1.8;}
+  section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:26px 30px;margin-bottom:20px;}
+  h2{font-size:17px;font-weight:600;margin:0 0 6px;letter-spacing:-.1px;}
+  h2 .tag{font-size:11.5px;font-weight:500;color:var(--accent);background:var(--accent-bg);
+    border-radius:5px;padding:2px 7px;margin-left:8px;vertical-align:2px;}
+  h3{font-size:14.5px;font-weight:600;margin:22px 0 10px;}
+  h3:first-of-type{margin-top:14px;}
+  h4{font-size:13.5px;font-weight:600;margin:18px 0 8px;color:var(--ink);}
+  p{margin:8px 0;}
+  .lead{color:var(--ink2);font-size:13.5px;margin-bottom:14px;}
+  ul,ol{margin:8px 0;padding-left:22px;}
+  li{margin:5px 0;}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0;}
+  th{background:#fafbfc;color:var(--ink2);font-weight:600;text-align:left;
+    padding:9px 11px;border-bottom:1.5px solid var(--line);font-size:12.5px;white-space:nowrap;}
+  td{padding:9px 11px;border-bottom:1px solid var(--line2);vertical-align:top;}
+  tr:last-child td{border-bottom:none;}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;
+    background:var(--line2);padding:1px 5px;border-radius:4px;}
+  .v{font-weight:600;}
+  .up{color:var(--up);font-weight:600;}
+  .down{color:var(--down);font-weight:600;}
+  .pill{display:inline-block;font-size:11.5px;padding:1px 7px;border-radius:5px;line-height:1.6;white-space:nowrap;}
+  .pill.has{background:var(--ok-bg);color:var(--ok);}
+  .pill.computed{background:var(--warn-bg);color:var(--warn);}
+  .pill.missing{background:var(--bad-bg);color:var(--bad);}
+  .pill.new{background:var(--purple-bg);color:var(--purple);}
+  .pill.info{background:var(--accent-bg);color:var(--accent);}
+  .note{background:var(--accent-bg);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;
+    padding:12px 16px;font-size:13px;color:#1c3d63;margin:14px 0;}
+  .warn{background:var(--warn-bg);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;
+    padding:12px 16px;font-size:13px;color:#6b3d00;margin:14px 0;}
+  .bad{background:var(--bad-bg);border-left:3px solid var(--bad);border-radius:0 8px 8px 0;
+    padding:12px 16px;font-size:13px;color:#6d1a1d;margin:14px 0;}
+  .note b,.warn b,.bad b{font-weight:600;}
+  .goal{border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:0 11px 11px 0;
+    padding:14px 18px;margin:12px 0;background:#fafbfc;}
+  .goal .gt{font-size:14px;font-weight:600;margin-bottom:4px;color:var(--accent);}
+  .goal .gd{font-size:13px;color:var(--ink2);}
+  .goal .gq{font-size:12px;color:var(--ink3);margin-top:6px;}
+  footer{padding:20px 30px;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;font-size:12px;color:var(--ink2);line-height:1.75;}
+  footer .src{color:var(--ink3);margin-bottom:10px;}
+  @media(max-width:860px){
+    .wrap{padding:18px 14px 40px;}
+    section{padding:20px 18px;}
+    .tblwrap{overflow-x:auto;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>StockSentry · 股票图形与导轨改造方案</h1>
+  <div class="sub">在现有图表基础上补齐图形类型、升级导轨为可决策的趋势轨道、扩展到大盘与板块视图</div>
+  <div class="meta">
+    目标站点：<code>https://stocksentry-ashare.app.workbuddy.host/</code> &nbsp;·&nbsp;
+    仓库：<code>github.com/Martens-100/stock-sentry</code>（main，842 KB）&nbsp;·&nbsp;
+    方案日期 2026-10-08<br>
+    现状判定依据：源码逐文件核对（<code>lib/tech.js</code> / <code>lib/source.js</code> / <code>public/app.js</code> / <code>public/index.html</code>）+ 线上页面实际渲染结果
+  </div>
+</header>
+
+<section>
+  <h2>一、现状盘点<span class="tag">先看清已有什么</span></h2>
+  <p class="lead">这个系统的图表基础比预期扎实。所以本方案的重点不是"从头加图形"，而是<b>把已经算出来却没画的东西画出来</b>，以及<b>把导轨从参考线升级成决策轨道</b>。</p>
+
+  <h3>1.1 已有图形</h3>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:22%">图形</th><th style="width:12%">状态</th><th style="width:66%">实现细节</th></tr></thead>
+    <tbody>
+      <tr><td>分时走势图</td><td><span class="pill has">已有</span></td><td>价格线 + 均价线 + 成交量柱；分钟级价格，累计量已做差分</td></tr>
+      <tr><td>日 K 线（120 根）</td><td><span class="pill has">已有</span></td><td>Canvas 自绘，<code>drawKline()</code>，三区布局：K线区 58% / 量区 16% / MACD 区余量</td></tr>
+      <tr><td>均线 MA5/10/20/60</td><td><span class="pill has">已有</span></td><td>主图叠加，可开关</td></tr>
+      <tr><td>布林上下轨</td><td><span class="pill has">已有</span></td><td>主图叠加，可开关，含 <code>alignSeries()</code> 长度防御</td></tr>
+      <tr><td>回归导轨通道</td><td><span class="pill has">已有</span></td><td>主图叠加，可开关，含三重对齐策略（dates 锚点 → offset → 长度相减）</td></tr>
+      <tr><td>成交量柱</td><td><span class="pill has">已有</span></td><td>常显，无独立开关</td></tr>
+      <tr><td>MACD 柱 + DIF/DEA</td><td><span class="pill has">已有</span></td><td>常显副图，无独立开关</td></tr>
+      <tr><td>三条位置条</td><td><span class="pill has">已有</span></td><td>布林轨道 / 回归导轨 / 唐奇安区间，标出当前价在轨道中的位置</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>1.2 已有指标计算（<code>lib/tech.js</code>）</h3>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:26%">指标</th><th style="width:14%">是否已画</th><th style="width:60%">备注</th></tr></thead>
+    <tbody>
+      <tr><td>MA 5/10/20/30/60/120/250</td><td><span class="pill has">已画 4 条</span></td><td>算了 7 条，图上只画 MA5/10/20/60</td></tr>
+      <tr><td>MACD</td><td><span class="pill has">已画</span></td><td>含 series</td></tr>
+      <tr><td><b>RSI(14)</b></td><td><span class="pill computed">算了没画</span></td><td>只有指标卡数值 + 信号规则，无副图</td></tr>
+      <tr><td><b>KDJ(9)</b></td><td><span class="pill computed">算了没画</span></td><td>同上，J 值参与信号判定但图上不可见</td></tr>
+      <tr><td>BOLL(20,2)</td><td><span class="pill has">已画</span></td><td>含 series</td></tr>
+      <tr><td>ATR(14)</td><td><span class="pill computed">算了没画</span></td><td>只用于止损宽度与百分比</td></tr>
+      <tr><td><b>唐奇安区间(20)</b></td><td><span class="pill computed">算了没画</span></td><td><b>只有位置条，主图没有通道线</b></td></tr>
+      <tr><td>回归导轨</td><td><span class="pill has">已画</span></td><td>60/45/30/20 自适应，k=2.0/1.8/1.6/1.5</td></tr>
+      <tr><td>枢轴 / 关键价位</td><td><span class="pill computed">算了没画</span></td><td>只以文字列出，图上无标注</td></tr>
+      <tr><td>成交量均线 avgVol5/20</td><td><span class="pill computed">算了没画</span></td><td>有数值，量区无均线</td></tr>
+      <tr><td>布林带宽分位</td><td><span class="pill computed">算了没画</span></td><td>有"39% 分位"文字，无带宽时序带</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>1.3 缺口清单</h3>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:18%">类别</th><th style="width:82%">缺口</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>算了没画</b><br><span style="font-size:12px;color:var(--ok)">最低成本</span></td>
+        <td>KDJ 副图 · RSI 副图 · 唐奇安通道线 · 枢轴价位标注 · 成交量均线 · 布林带宽带 · MA30/120/250</td>
+      </tr>
+      <tr>
+        <td><b>没算没画</b></td>
+        <td>周线/月线 K 线（<b>数据源已支持 <code>klt=week/month</code>，仅 UI 未接</b>）· Keltner 通道（ATR 通道）· 安德鲁叉 · 导轨向未来外推 · 多窗口导轨叠加</td>
+      </tr>
+      <tr>
+        <td><b>视图缺失</b></td>
+        <td><b>大盘/指数视图（完全缺失）</b>· <b>板块视图（完全缺失）</b>· 自选股横向对比 · 个股 vs 指数相对强弱</td>
+      </tr>
+      <tr>
+        <td><b>交互缺失</b></td>
+        <td>周期切换 · 区间缩放/平移 · 十字光标取值（<code>chartOpts.cross</code> 已定义但未接线）· 导轨参数手调 · 图层开关仅 4 个</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note"><b>现状判定的两个硬约束（决定方案形态）：</b><br>
+  ① <b>前端是原生 Canvas 自绘、零 CDN 依赖</b>（README 明确写"无任何 CDN 依赖"）。所有新增图形必须继续手绘，<b>不能引入 ECharts</b>——否则会破坏离线可用性与 CSP <code>default-src 'self'</code>。<br>
+  ② <b>服务端版与静态版必须同构</b>。<code>lib/</code> 下的模块会被 <code>build-static.js</code> 打包进 <code>docs/bundle.js</code>。新增指标只能写在 <code>lib/</code>，且不得引用 Node 专属 API（除非用 <code>@node-only</code> 包起来）。</div>
+</section>
+
+<section>
+  <h2>二、修改目标<span class="tag">三条，按性价比排序</span></h2>
+
+  <div class="goal">
+    <div class="gt">目标 1 · 把"算了没画"的全部画出来</div>
+    <div class="gd">系统已经算出了 KDJ、RSI、唐奇安、成交量均线、布林带宽分位，但用户在图上看不到。
+    这些是<b>零新增数据成本</b>——只加绘图代码，不改数据层。</div>
+    <div class="gq">衡量标准：新增 7 个可视元素，数据层零改动。</div>
+  </div>
+
+  <div class="goal">
+    <div class="gt">目标 2 · 导轨从"参考线"升级为"决策轨道"</div>
+    <div class="gd">现在的导轨只是一条画到最后一根 K 线的通道。趋势轨道的核心价值在于
+    <b>回答"未来通道在哪里"</b>——当前实现缺三件事：<b>向未来外推</b>、<b>突破点标记</b>、<b>参数可调</b>。
+    信号引擎已经判定了突破，但图上没有任何标记，用户必须自己去读文字。</div>
+    <div class="gq">衡量标准：轨道外推 ≥20 根；突破点有图上标记且可点击；窗口与 k 值可手调。</div>
+  </div>
+
+  <div class="goal">
+    <div class="gt">目标 3 · 从"单股详情"扩展到"大盘 / 板块 / 自选股"三层</div>
+    <div class="gd">当前系统只有个股视角。但<b>同一根 K 线在不同市场环境下含义完全不同</b>——
+    个股跌破布林下轨，在指数同步下跌时是"随大盘"，在指数走强时才是"个股走弱"。
+    没有大盘与板块视图，就无法区分这两者。</div>
+    <div class="gq">衡量标准：新增大盘视图与板块视图各 1 个；个股页新增"相对指数"叠加。</div>
+  </div>
+</section>
+
+<section>
+  <h2>三、新增图形类型<span class="tag">四组</span></h2>
+
+  <h3>A 组 · 主图（价格区）</h3>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:6%">序</th><th style="width:20%">图形</th><th style="width:14%">数据状态</th><th style="width:60%">说明与呈现方式</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>A1</td><td><b>周线 / 月线 K 线</b></td><td><span class="pill info">源已支持</span></td>
+        <td>数据源已有 <code>klt=week/month</code> 参数，只需在 UI 加周期切换按钮组（日/周/月）并透传。
+        <b>周月线的均线周期应同步换算</b>（MA5 周 = MA25 日），否则均线会失去意义。</td>
+      </tr>
+      <tr>
+        <td>A2</td><td><b>唐奇安通道线</b></td><td><span class="pill computed">已算未画</span></td>
+        <td><code>donchian(kline, 20)</code> 已算出上下沿。在主图以<b>阶梯线</b>绘制（不是平滑曲线——唐奇安的本质是"过去 N 日极值"，用平滑线会失真）。
+        阶梯在创新高/新低时才跳变，视觉上能直接看出"区间何时被突破"。</td>
+      </tr>
+      <tr>
+        <td>A3</td><td><b>Keltner 通道（ATR 通道）</b></td><td><span class="pill new">新增</span></td>
+        <td>中轨 = EMA20，上下轨 = 中轨 ± 2×ATR(14)。与布林的区别：布林用标准差（对跳空敏感），Keltner 用 ATR（对跳空稳健）。
+        <b>两者叠加时，"布林在 Keltner 内侧"= 波动收窄（变盘临近）</b>——这是一个高价值信号，值得单独出规则。</td>
+      </tr>
+      <tr>
+        <td>A4</td><td><b>关键价位标注</b></td><td><span class="pill computed">已算未画</span></td>
+        <td><code>keyLevels()</code> 已算出支撑/阻力。在图上画<b>水平虚线 + 右侧价格标签</b>，按距现价远近分档着色。</td>
+      </tr>
+      <tr>
+        <td>A5</td><td>安德鲁叉 Pitchfork</td><td><span class="pill new">新增</span></td>
+        <td>取三个枢轴点（高-低-高 或 低-高-低）画三条平行趋势轨道。<b>可选功能</b>——枢轴点自动识别容易出错，建议先只做手动选点。</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>B 组 · 副图（新增独立区域）</h3>
+  <p>当前副图只有 MACD 一个区。建议改为<b>可堆叠的副图栈</b>——每个副图高度可折叠，用户勾选哪些就显示哪些。</p>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:6%">序</th><th style="width:20%">副图</th><th style="width:14%">数据状态</th><th style="width:60%">说明</th></tr></thead>
+    <tbody>
+      <tr><td>B1</td><td><b>KDJ 副图</b></td><td><span class="pill computed">已算未画</span></td>
+        <td>三线 K/D/J + 超买(80)/超卖(20) 参考线 + J 值 0/100 极值区着色。<b>J 值已参与信号判定</b>，画出来用户才能验证信号对不对。</td></tr>
+      <tr><td>B2</td><td><b>RSI 副图</b></td><td><span class="pill computed">已算未画</span></td>
+        <td>RSI14 单线 + 30/70 参考线 + 超买超卖区着色。可选叠加 RSI6/RSI24 做快慢对比。</td></tr>
+      <tr><td>B3</td><td><b>成交量均线</b></td><td><span class="pill computed">已算未画</span></td>
+        <td>在现有量区叠加 MA5/MA20 均量线。<code>avgVol5</code>/<code>avgVol20</code> 已有数值，扩展成序列即可。</td></tr>
+      <tr><td>B4</td><td><b>轨道宽度带</b></td><td><span class="pill computed">已算未画</span></td>
+        <td>布林带宽（上轨−下轨）/中轨 的时序曲线 + 近 120 日分位带。
+        <b>带宽收窄至 20% 分位以下 = 变盘临近</b>——这是布林最有价值的用法，现在只有一行文字。</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>C 组 · 导轨增强<span class="tag">本方案的核心</span></h3>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:6%">序</th><th style="width:22%">增强项</th><th style="width:72%">说明与呈现方式</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>C1</td><td><b>导轨向未来外推</b></td>
+        <td>当前导轨只画到最后一根 K 线。趋势轨道的核心价值是<b>回答"未来通道在哪里"</b>。<br>
+        实现：按回归斜率线性外推 N 根（建议 20 根），画成<b>虚线</b>并在末端标注通道值。<br>
+        视觉区分：<b>已实现区实线、外推区虚线</b>——不能让人误以为外推是既成事实。<br>
+        外推同时要给出<b>置信衰减</b>：外推越远越不可靠，建议用透明度渐变或加"±1σ"喇叭口。</td>
+      </tr>
+      <tr>
+        <td>C2</td><td><b>多窗口导轨叠加</b></td>
+        <td>现在自适应算法在 60/45/30/20 里<b>只挑一个</b>。建议允许同时显示 2–3 条不同窗口的导轨（如 60 日中期 + 20 日短期）。<br>
+        <b>价值</b>：当短期导轨与中期导轨方向一致 = 趋势共振；方向背离 = 趋势可能转折。这是当前单一导轨给不出的信息。</td>
+      </tr>
+      <tr>
+        <td>C3</td><td><b>突破 / 触及标记</b></td>
+        <td>信号引擎已判定"突破上轨""跌破下轨""沿上轨运行"等 10 类轨道规则，但<b>图上没有任何标记</b>。<br>
+        实现：在对应 K 线上画三角标记（<span class="up">▲</span> 向上突破 / <span class="down">▼</span> 向下突破），hover 显示该信号的方向、强度、权重、数据依据。<br>
+        <b>点击标记应跳转到信号面板对应条目</b>——这是把图形与文字结论连起来的关键。</td>
+      </tr>
+      <tr>
+        <td>C4</td><td><b>斜率可视化</b></td>
+        <td>现在斜率只是文字（"斜率 −7.39%/20日"）。建议在导轨末端画<b>斜率指示箭头</b>，箭头长度正比于斜率绝对值，方向即趋势方向。<br>
+        颜色遵循 <b>A 股惯例：向上红、向下绿</b>（与美股相反，不要弄反）。</td>
+      </tr>
+      <tr>
+        <td>C5</td><td><b>导轨参数手调</b></td>
+        <td>现在窗口与 k 值完全自适应、用户无法干预。建议加一个折叠面板：窗口（20/30/45/60/120）+ k 值（1.0–3.0 滑块）+ 是否外推 + 外推根数。<br>
+        <b>注意</b>：自适应值仍作为默认，手调是覆盖。<b>参数应写进 URL hash 或 localStorage</b>，刷新后保留。</td>
+      </tr>
+      <tr>
+        <td>C6</td><td>通道位置连续色带</td>
+        <td>在 K 线区右侧加一条<b>垂直色带</b>，用颜色表示价格在通道中的位置（上轨附近=红、中轨=灰、下轨附近=绿）。比单点位置条更能表达"最近在通道里的移动轨迹"。</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>D 组 · 跨标的视图</h3>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:6%">序</th><th style="width:22%">视图</th><th style="width:14%">现状</th><th style="width:58%">内容</th></tr></thead>
+    <tbody>
+      <tr><td>D1</td><td><b>大盘 / 指数视图</b></td><td><span class="pill missing">完全缺失</span></td>
+        <td>上证指数 / 深证成指 / 创业板指 / 沪深300 的 K 线 + 布林 + 回归导轨 + 宽度带。<br>
+        <b>指数代码可直接用现有行情源</b>（<code>sh000001</code>、<code>sz399001</code>、<code>sz399006</code>、<code>sh000300</code>），无需新数据源。</td></tr>
+      <tr><td>D2</td><td><b>板块视图</b></td><td><span class="pill missing">完全缺失</span></td>
+        <td>申万行业 / 概念板块的指数走势 + 成分股轨道状态分布（多少只在上轨/中轨/下轨）。<br>
+        <b>数据源注意</b>：东财板块接口无 CORS，静态版需降级或改由腾讯概念板块接口；这一点必须在方案里预先说明，否则静态版会静默失败。</td></tr>
+      <tr><td>D3</td><td><b>自选股轨道状态一览</b></td><td><span class="pill missing">缺失</span></td>
+        <td>在自选股列表每行加：迷你 K 线缩略图（sparkline）+ 轨道状态徽标（上升/下降/水平 + 通道位置）。<br>
+        <b>让用户不用逐个点开就能看出"哪只在通道下沿、哪只在通道上沿"</b>。</td></tr>
+      <tr><td>D4</td><td><b>个股 vs 指数 叠加</b></td><td><span class="pill missing">缺失</span></td>
+        <td>个股主图叠加同期指数走势（归一化到同一基准），或独立副图显示<b>相对强弱线（个股/指数）</b>。<br>
+        这是区分"个股走弱"与"随大盘下跌"的唯一手段。</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2>四、导轨呈现方式<span class="tag">三层轨道体系</span></h2>
+  <p class="lead">当前是"一条自适应通道"。建议改为<b>三层时间尺度轨道 + 外推区</b>，让用户一眼看到短期波动在中期通道中的位置。</p>
+
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:14%">层</th><th style="width:16%">周期</th><th style="width:24%">轨道类型</th><th style="width:46%">作用</th></tr></thead>
+    <tbody>
+      <tr><td><b>短期轨</b></td><td>20 根</td><td>唐奇安区间 + 布林</td><td>区间是否被突破、波动是否收窄（箱体交易）</td></tr>
+      <tr><td><b>中期轨</b></td><td>60 根</td><td>回归导轨（现有默认）</td><td>趋势方向与通道斜率（趋势跟随）</td></tr>
+      <tr><td><b>长期轨</b></td><td>120 根</td><td>回归导轨</td><td>大级别趋势与通道，判断中期轨是否只是长期轨内的反弹</td></tr>
+      <tr><td><b>外推区</b></td><td>未来 20 根</td><td>中期轨外推（虚线）</td><td>回答"未来通道在哪里"——支撑/压力位的动态预测</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>视觉规范</h3>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:20%">元素</th><th style="width:22%">样式</th><th style="width:58%">说明</th></tr></thead>
+    <tbody>
+      <tr><td>中期轨通道带</td><td>实线 + 半透明填充</td><td>上下轨用实线，通道内部浅色填充，一眼看出"通道宽度"</td></tr>
+      <tr><td>外推区</td><td><b>虚线 + 透明度渐变</b></td><td>越远越淡，明确表达"这是推演不是事实"</td></tr>
+      <tr><td>上升轨</td><td><span class="up">红色系</span></td><td rowspan="3"><b>A 股惯例：红涨绿跌</b>。这与美股相反，实现时必须确认，不要照搬国际惯例</td></tr>
+      <tr><td>下降轨</td><td><span class="down">绿色系</span></td></tr>
+      <tr><td>水平轨</td><td>灰色系</td></tr>
+      <tr><td>突破标记</td><td><span class="up">▲</span> / <span class="down">▼</span> 三角</td><td>标在触发当根 K 线上，可 hover、可点击</td></tr>
+      <tr><td>当前通道位置</td><td>右侧垂直色带</td><td>连续颜色表示位置，非单点</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2>五、应用范围<span class="tag">哪些视图用哪些图形</span></h2>
+  <div class="tblwrap">
+  <table>
+    <thead>
+      <tr>
+        <th style="width:16%">视图</th>
+        <th style="width:11%">现状</th>
+        <th style="width:24%">主图</th>
+        <th style="width:24%">副图</th>
+        <th style="width:25%">导轨</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><b>个股详情页</b></td><td><span class="pill has">已有</span></td>
+        <td>K线（日/周/月）+ MA + 布林 + Keltner + 唐奇安阶梯 + 关键价位</td>
+        <td>MACD + KDJ + RSI + 成交量均线 + 带宽带（可堆叠）</td>
+        <td>三层轨道 + 外推 + 突破标记 + 参数面板</td>
+      </tr>
+      <tr>
+        <td><b>大盘 / 指数视图</b></td><td><span class="pill missing">新增</span></td>
+        <td>指数 K 线 + 布林 + MA</td>
+        <td>成交量 + MACD</td>
+        <td>中期轨 + 外推（<b>指数不做突破标记</b>——指数无交易意义）</td>
+      </tr>
+      <tr>
+        <td><b>板块视图</b></td><td><span class="pill missing">新增</span></td>
+        <td>板块指数 K 线 + 布林</td>
+        <td>相对强弱线（板块/大盘）</td>
+        <td>中期轨 + 成分股轨道状态分布柱</td>
+      </tr>
+      <tr>
+        <td><b>自选股列表</b></td><td><span class="pill has">已有</span></td>
+        <td>迷你 sparkline（20 根）</td>
+        <td>—</td>
+        <td>轨道状态徽标（方向 + 通道位置）</td>
+      </tr>
+      <tr>
+        <td><b>报告输出</b></td><td><span class="pill has">已有</span></td>
+        <td colspan="3">报告中的「上下轨线与导轨区间研判」章节应同步引用新轨道（外推位、突破点），
+        <b>并保留数据时点标注</b>——报告是快照，图形是实时的，两者口径必须写清</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="warn"><b>一个必须先决定的范围问题：</b>大盘与板块视图要不要做，取决于它们回答什么问题。
+  如果只是"看看指数涨跌"，现有的行情源随便接一下就行；但如果要做到<b>能判断个股的相对强弱</b>，
+  就必须实现 D4（个股 vs 指数叠加）与相对强弱线，工作量会大一个量级。
+  <b>建议先做 D4 再决定要不要做 D1/D2</b>——因为 D4 才是真正产生决策价值的那一项。</div>
+</section>
+
+<section>
+  <h2>六、数据来源<span class="tag">哪些要新源、哪些不用</span></h2>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:20%">数据</th><th style="width:20%">来源</th><th style="width:14%">状态</th><th style="width:46%">备注</th></tr></thead>
+    <tbody>
+      <tr><td>日 K 线</td><td>腾讯 <code>web.ifzq.gtimg.cn</code></td><td><span class="pill has">已有</span></td><td>前复权 qfq</td></tr>
+      <tr><td><b>周 / 月 K 线</b></td><td>同一接口 <code>klt=week/month</code></td><td><span class="pill info">源已支持</span></td><td><b>只需改 UI 透传，零新数据源</b></td></tr>
+      <tr><td><b>指数行情</b></td><td>腾讯 <code>qt.gtimg.cn</code></td><td><span class="pill info">源已支持</span></td><td>用 <code>sh000001</code> / <code>sz399001</code> / <code>sz399006</code> / <code>sh000300</code> 等指数代码，与个股走同一套解析</td></tr>
+      <tr><td>分时数据</td><td>腾讯</td><td><span class="pill has">已有</span></td><td>累计量已做差分</td></tr>
+      <tr><td>主力资金流</td><td>东财 <code>push2.eastmoney.com</code></td><td><span class="pill has">已有</span></td><td>静态版降级为分时估算</td></tr>
+      <tr><td><b>板块指数 / 成分股</b></td><td>东财板块接口</td><td><span class="pill missing">需新接</span></td><td><b>⚠️ 无 CORS</b>：静态版会失败。需评估腾讯概念板块接口或自带静态快照</td></tr>
+      <tr><td>Keltner / 安德鲁叉</td><td>本地计算</td><td><span class="pill new">纯计算</span></td><td>基于已有 OHLC 与 ATR，无新数据源</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="bad"><b>静态版的 CORS 陷阱必须提前处理：</b>本项目同时提供静态版（浏览器直连行情源）。
+  东财板块接口<b>不带 <code>access-control-allow-origin</code></b>，静态版访问会被浏览器拦截。<br>
+  这不是"以后再说"的问题——<b>它会表现为静默失败</b>（请求发出、控制台报 CORS、图表空白），
+  而 curl 测试一切正常。若要做板块视图，<b>必须在方案阶段就确定静态版的降级方案</b>：
+  要么换腾讯的概念板块接口，要么在构建时预生成板块快照。</div>
+</section>
+
+<section>
+  <h2>七、交互方式</h2>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:18%">交互</th><th style="width:14%">现状</th><th style="width:68%">设计</th></tr></thead>
+    <tbody>
+      <tr><td><b>十字光标取值</b></td><td><span class="pill computed">已定义未接线</span></td>
+        <td><code>chartOpts.cross</code> 已存在但未使用。hover 时显示竖线 + 该日 OHLC / 成交量 / MACD / KDJ / RSI / <b>通道位置百分比</b>。<br>
+        <b>关键：光标同时驱动主图与所有副图</b>——三图联动，否则读不出"这天指标发生了什么"。</td></tr>
+      <tr><td>周期切换</td><td><span class="pill missing">缺失</span></td><td>日/周/月按钮组，切换时<b>指标周期需同步换算</b>并提示"周线模式下 MA5 = 25 个交易日"</td></tr>
+      <tr><td>区间缩放 / 平移</td><td><span class="pill missing">缺失</span></td><td>滚轮缩放 + 拖拽平移。缩放范围限 30–250 根，超限时提示。<b>缩放后所有图层必须同步重算坐标</b>（导轨对齐逻辑已有，复用即可）</td></tr>
+      <tr><td>图层开关</td><td><span class="pill has">4 个</span></td><td>扩展到 8–10 个：布林 / Keltner / 唐奇安 / 均线 / 导轨 / 关键价位 / 突破标记 / 十字光标</td></tr>
+      <tr><td>导轨参数面板</td><td><span class="pill missing">缺失</span></td><td>折叠面板：窗口 / k 值 / 外推根数 / 是否显示多窗口。参数存 localStorage</td></tr>
+      <tr><td>标记点击跳转</td><td><span class="pill missing">缺失</span></td><td>点击图上突破标记 → 滚动到信号面板对应条目并高亮</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2>八、涉及范围<span class="tag">文件级改动清单</span></h2>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:24%">文件</th><th style="width:10%">改动量</th><th style="width:66%">内容</th></tr></thead>
+    <tbody>
+      <tr><td><code>lib/tech.js</code></td><td><span class="pill info">中</span></td>
+        <td>新增 <code>keltner()</code>、<code>railExtend()</code>（导轨外推）、<code>railMulti()</code>（多窗口）、<code>bandWidthSeries()</code>（带宽序列）、<code>slopeSeries()</code>（斜率序列）。<b>全部纯计算，无 Node 依赖</b>，可直接进 bundle</td></tr>
+      <tr><td><code>lib/rules.js</code></td><td><span class="pill info">中</span></td>
+        <td>新增轨道规则：多窗口共振/背离、布林在 Keltner 内侧（波动收窄）、带宽分位极值、外推位触及、相对指数强弱。<b>每条规则必须带数据依据</b>（现有规范）</td></tr>
+      <tr><td><code>lib/engine.js</code></td><td><span class="pill has">小</span></td>
+        <td>评分模型纳入新规则权重；轨道研判 <code>channelVerdict()</code> 扩展九类→含多窗口共振态</td></tr>
+      <tr><td><code>public/app.js</code></td><td><span class="pill missing">大</span></td>
+        <td>新增 <code>drawKeltner()</code> / <code>drawDonchianStep()</code> / <code>drawRailExtended()</code> / <code>drawBreakMarkers()</code> / <code>drawSubChart()</code>（副图栈通用绘制）/ <code>drawCrosshair()</code>；重构 <code>drawKline()</code> 为分区可配置；新增周期切换与缩放</td></tr>
+      <tr><td><code>public/index.html</code></td><td><span class="pill info">中</span></td>
+        <td>图层开关扩展、周期按钮组、导轨参数面板、大盘/板块视图容器</td></tr>
+      <tr><td><code>public/style.css</code></td><td><span class="pill has">小</span></td>
+        <td>新增图层配色变量（红涨绿跌）、副图栈布局、参数面板样式</td></tr>
+      <tr><td><code>lib/source.js</code></td><td><span class="pill has">小</span></td>
+        <td>启用 <code>klt</code> 周期参数；新增指数代码解析分支</td></tr>
+      <tr><td><code>lib/report.js</code></td><td><span class="pill has">小</span></td>
+        <td>轨道章节引用新轨道数据（外推位、突破点），保留数据时点标注</td></tr>
+      <tr><td><code>static-api.js</code></td><td><span class="pill has">小</span></td>
+        <td>同步新接口（若有）；板块数据的静态降级</td></tr>
+      <tr><td><code>build-static.js</code></td><td><span class="pill has">无</span></td>
+        <td>无需改（自动打包 <code>lib/</code>）——<b>但构建后必须重跑密钥扫描</b></td></tr>
+      <tr><td><code>scripts/</code></td><td><span class="pill info">中</span></td>
+        <td>新增 <code>verify-rail-extend.js</code>（外推数学正确性）、<code>verify-subchart.js</code>（副图坐标与主图对齐）；扩展已有 <code>verify-chart-layers.js</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note"><b>同构约束的检查点：</b>任何写进 <code>lib/</code> 的新代码都会同时跑在 Node 与浏览器里。
+  新增计算<b>不得引用 <code>fs</code>/<code>path</code>/<code>https</code></b>；确需 Node 专属逻辑时，
+  必须用 <code>/* @node-only */ ... /* @end-node-only */</code> 包起来，否则 <code>build-static.js</code> 会因标记不配对而失败。</div>
+</section>
+
+<section>
+  <h2>九、期望结果<span class="tag">可验收的标准</span></h2>
+
+  <h3>9.1 展示效果</h3>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:24%">维度</th><th style="width:76%">预期</th></tr></thead>
+    <tbody>
+      <tr><td><b>信息密度</b></td><td>单屏内可同时看到：三层轨道 + 突破点 + 三个副图。用户不必在标签页之间来回切</td></tr>
+      <tr><td><b>一眼可读</b></td><td>看导轨颜色即知趋势方向；看通道位置色带即知"偏贵还是偏便宜"；看突破标记即知"信号在哪天触发"</td></tr>
+      <tr><td><b>推演与事实分离</b></td><td>外推区必须是虚线且透明度渐变——<b>不能让人把推演当既成事实</b></td></tr>
+      <tr><td><b>图文一致</b></td><td>图上每个标记都能在信号面板找到对应条目；反之亦然。点击标记可跳转</td></tr>
+      <tr><td><b>口径可追溯</b></td><td>每个新图形旁标注参数与数据时点（如"回归导轨 60 根 · k=2 · 截至 2026-10-08 15:00"）</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>9.2 可验证的验收标准</h3>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:8%">编号</th><th style="width:52%">验收项</th><th style="width:40%">验证方式</th></tr></thead>
+    <tbody>
+      <tr><td>V1</td><td>导轨外推的数学正确性</td><td>脚本断言：外推点 = 末点 + 斜率 × 步数；误差 &lt; 1e-6</td></tr>
+      <tr><td>V2</td><td>副图与主图 X 轴对齐</td><td>断言：同一下标 i 的 X 坐标在三图中完全相等</td></tr>
+      <tr><td>V3</td><td>周期切换后指标口径正确</td><td>断言：周线 MA5 等于日线 MA25 的周聚合值</td></tr>
+      <tr><td>V4</td><td>新增图层不破坏原有图层</td><td>扩展 <code>verify-chart-layers.js</code>：逐个开关组合下都渲染出非空像素</td></tr>
+      <tr><td>V5</td><td>窄视口不产生空图</td><td>现有 <code>cw &lt; 40</code> 防御须对新图层同样生效</td></tr>
+      <tr><td>V6</td><td>静态版功能一致</td><td>构建后跑一遍浏览器路径验证（<code>verify-browser-path.js</code>）</td></tr>
+      <tr><td>V7</td><td>密钥扫描通过</td><td><code>npm run check</code> 退出码 0</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2>十、分期实施建议<span class="tag">按性价比排序</span></h2>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:8%">期</th><th style="width:30%">内容</th><th style="width:14%">成本</th><th style="width:48%">为什么排这个位置</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>P0</b></td>
+        <td>B1 KDJ 副图 · B2 RSI 副图 · B3 成交量均线 · A2 唐奇安阶梯线 · A4 关键价位标注</td>
+        <td><span class="pill has">低</span></td>
+        <td><b>全部是"算了没画"，数据层零改动</b>。收益最直接：用户终于能看到信号引擎判定的依据</td>
+      </tr>
+      <tr>
+        <td><b>P1</b></td>
+        <td>C1 导轨外推 · C3 突破标记 + 点击跳转 · C4 斜率箭头</td>
+        <td><span class="pill info">中</span></td>
+        <td>把导轨从"参考线"变成"决策轨道"。突破标记让图文打通，这是体验提升最明显的一步</td>
+      </tr>
+      <tr>
+        <td><b>P2</b></td>
+        <td>A1 周月线切换 · C5 参数手调 · 十字光标接线 · 区间缩放</td>
+        <td><span class="pill info">中</span></td>
+        <td>交互能力补齐。周月线的数据源已就绪，成本主要在均线周期换算的正确性验证</td>
+      </tr>
+      <tr>
+        <td><b>P3</b></td>
+        <td>B4 带宽带 · A3 Keltner 通道 · C2 多窗口导轨</td>
+        <td><span class="pill info">中</span></td>
+        <td>新增指标与规则。<b>必须同步补测试</b>——新规则会改变评分结果，没有回归测试会静默影响所有历史结论</td>
+      </tr>
+      <tr>
+        <td><b>P4</b></td>
+        <td>D4 个股 vs 指数叠加 · D3 自选股轨道徽标</td>
+        <td><span class="pill missing">高</span></td>
+        <td>先做 D4 是因为它产生决策价值（区分个股走弱 vs 随大盘）。D3 是体验优化</td>
+      </tr>
+      <tr>
+        <td><b>P5</b></td>
+        <td>D1 大盘视图 · D2 板块视图</td>
+        <td><span class="pill missing">高</span></td>
+        <td><b>最后做</b>。板块数据有 CORS 问题需要先解决；且只有在 D4 做完后才真正有用</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2>十一、风险与边界</h2>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:26%">风险</th><th style="width:34%">触发场景</th><th style="width:40%">应对</th></tr></thead>
+    <tbody>
+      <tr><td><b>外推被当成事实</b></td><td>用户看到虚线通道末端，以为是"目标价"</td>
+        <td>虚线 + 透明度渐变 + 末端标注"推演，非预测"；报告引用时必须写明"基于 N 日回归外推"</td></tr>
+      <tr><td><b>多图层性能</b></td><td>Canvas 自绘 + 10 个图层 + 250 根 K 线</td>
+        <td>单次重绘路径数上限；副图栈按需渲染（未勾选不计算）；缩放时用降采样</td></tr>
+      <tr><td><b>新增规则改变评分</b></td><td>新轨道规则纳入权重后，同一标的评分变化</td>
+        <td><b>必须补回归测试</b>：记录一批标的在改动前的评分基线，改动后逐项比对差异并解释</td></tr>
+      <tr><td><b>静态版 CORS</b></td><td>板块/指数接口无 CORS</td>
+        <td>方案阶段先验证；必要时构建时预生成快照，或明确标注"静态版不支持板块视图"</td></tr>
+      <tr><td><b>均线周期换算错误</b></td><td>周线模式下沿用日线 MA5</td>
+        <td>这是最容易出错且最难发现的一类 bug（图看起来正常，含义完全错）。必须有断言测试</td></tr>
+      <tr><td><b>红绿反转</b></td><td>照搬国际惯例把上升画成绿色</td>
+        <td>A 股红涨绿跌。新增颜色变量时集中定义，不散落在各绘图函数里</td></tr>
+      <tr><td>图层叠加遮挡</td><td>布林 + Keltner + 唐奇安 + 导轨同屏</td>
+        <td>分层透明度；提供"仅显示当前关注图层"的快捷切换</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="bad"><b>一条不能省的工程要求：</b>本项目的既有代码在"静默失败"上踩过多次坑
+  （K 线为空画白板、导轨对齐隐式契约、NaN 污染值域），源码注释里都留了记录。
+  <b>新增图形必须沿用同一套防御规范</b>：任何数组为空、任何值为 NaN、任何宽度为负，
+  都要画一句人话而不是留白。<b>"图是空的"必须有理由可见</b>——否则新图层会成为下一批静默故障的来源。</div>
+</section>
+
+<footer>
+  <div class="src">
+    现状判定依据：仓库 <code>github.com/Martens-100/stock-sentry</code>（main 分支，2026-09-17 最后更新）源码逐文件核对，
+    结合线上页面 <code>stocksentry-ashare.app.workbuddy.host</code> 的实际渲染结果。<br>
+    核对到的关键事实：<code>chartOpts</code> 实际仅 4 个开关（boll/rail/ma/cross）；KDJ、RSI、唐奇安、avgVol、布林带宽均已计算但未绘制；
+    <code>grep</code> 大盘/指数/板块关键词在 <code>public/</code> 下命中数为 0；<code>lib/source.js</code> 已含 <code>klt</code> 周期参数但 UI 未透传。<br>
+    本方案为功能设计文档，不构成投资建议。文中涉及的标的与指标仅用于说明技术方案。
+  </div>
+  <div>
+    <b>免责声明：</b>以上内容基于公开数据和量化分析，仅供参考，不构成投资建议。市场有风险，投资需谨慎。
+    任何投资决策应结合个人风险承受能力、资金状况和投资目标独立判断，必要时咨询持牌专业机构。过往表现不预示未来收益。
+  </div>
+</footer>
+
+</div>
+</body>
+</html>

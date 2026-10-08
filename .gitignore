@@ -18,3 +18,6 @@ qsys/logs/
 .vscode/
 .idea/
 *.swp
+
+# 外部克隆的独立项目（各自有 .git）
+stock-sentry/
