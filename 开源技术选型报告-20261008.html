@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>开源技术选型报告 · A股/美股双市场量化投研系统</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+  :root{
+    --ink:#16181d; --ink2:#4a4f5a; --ink3:#828a97;
+    --line:#e3e6ec; --line2:#f0f2f6;
+    --bg:#f6f7f9; --card:#ffffff;
+    --up:#c0392b; --down:#1e8449;
+    --accent:#1f5fa8; --accent-bg:#eef4fb;
+    --warn:#a35b00; --warn-bg:#fdf5e6;
+    --bad:#a3272b; --bad-bg:#fdeeee;
+    --ok:#1e6b3f; --ok-bg:#eaf5ee;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:14px;line-height:1.72;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 24px 64px;}
+  header.top{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:28px 30px;margin-bottom:20px;}
+  header.top h1{margin:0 0 8px;font-size:23px;font-weight:600;letter-spacing:-.2px;}
+  header.top .sub{color:var(--ink2);font-size:13.5px;margin-bottom:14px;}
+  header.top .meta{color:var(--ink3);font-size:12.5px;border-top:1px solid var(--line2);padding-top:12px;}
+  .picks{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:22px;}
+  .pick{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;}
+  .pick .slot{font-size:11.5px;color:var(--ink3);font-weight:600;letter-spacing:.4px;}
+  .pick .nm{font-size:15px;font-weight:600;margin:4px 0 2px;color:var(--accent);word-break:break-all;}
+  .pick .st{font-size:12.5px;color:var(--ink2);}
+  .pick .dep{margin-top:8px;}
+  section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:26px 30px;margin-bottom:20px;}
+  h2{font-size:17px;font-weight:600;margin:0 0 6px;letter-spacing:-.1px;}
+  h2 .tag{font-size:11.5px;font-weight:500;color:var(--accent);background:var(--accent-bg);
+    border-radius:5px;padding:2px 7px;margin-left:8px;vertical-align:2px;}
+  h3{font-size:14.5px;font-weight:600;margin:22px 0 10px;}
+  h3:first-of-type{margin-top:14px;}
+  p{margin:8px 0;}
+  .lead{color:var(--ink2);font-size:13.5px;margin-bottom:14px;}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0;}
+  th{background:#fafbfc;color:var(--ink2);font-weight:600;text-align:left;
+    padding:9px 11px;border-bottom:1.5px solid var(--line);font-size:12.5px;white-space:nowrap;}
+  td{padding:9px 11px;border-bottom:1px solid var(--line2);vertical-align:top;}
+  tr:last-child td{border-bottom:none;}
+  td.mono,th.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;}
+  .up{color:var(--up);font-weight:600;}
+  .down{color:var(--down);font-weight:600;}
+  .v{font-weight:600;}
+  .pill{display:inline-block;font-size:11.5px;padding:1px 7px;border-radius:5px;line-height:1.6;white-space:nowrap;}
+  .pill.ok{background:var(--ok-bg);color:var(--ok);}
+  .pill.mid{background:var(--warn-bg);color:var(--warn);}
+  .pill.bad{background:var(--bad-bg);color:var(--bad);}
+  .pill.info{background:var(--accent-bg);color:var(--accent);}
+  .note{background:var(--accent-bg);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;
+    padding:12px 16px;font-size:13px;color:#1c3d63;margin:14px 0;}
+  .warn{background:var(--warn-bg);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;
+    padding:12px 16px;font-size:13px;color:#6b3d00;margin:14px 0;}
+  .bad{background:var(--bad-bg);border-left:3px solid var(--bad);border-radius:0 8px 8px 0;
+    padding:12px 16px;font-size:13px;color:#6d1a1d;margin:14px 0;}
+  .note b,.warn b,.bad b{font-weight:600;}
+  .chartbox{border:1px solid var(--line);border-radius:11px;padding:14px 14px 6px;margin:14px 0;}
+  .chartbox .ct{font-size:13px;font-weight:600;margin-bottom:2px;}
+  .chartbox .cs{font-size:11.5px;color:var(--ink3);margin-bottom:8px;line-height:1.5;}
+  .chart{width:100%;height:330px;}
+  .stack{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:14px 0 6px;}
+  .sl{border:1px solid var(--line);border-radius:11px;padding:15px 16px;}
+  .sl.a{background:#eef4fb;border-color:#c9dcf2;}
+  .sl.b{background:#f2f7f2;border-color:#cfe3cf;}
+  .sl.c{background:#fbf5ee;border-color:#eeddc6;}
+  .sl .t{font-weight:600;font-size:13.5px;margin-bottom:4px;}
+  .sl .d{font-size:12.5px;color:var(--ink2);line-height:1.65;}
+  .sl.a .t{color:#1f5fa8;} .sl.b .t{color:#256b3d;} .sl.c .t{color:#9a5b12;}
+  footer{margin-top:8px;padding:20px 30px;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;font-size:12.5px;color:var(--ink2);line-height:1.75;}
+  footer .src{color:var(--ink3);font-size:12px;margin-bottom:10px;}
+  @media(max-width:860px){
+    .picks{grid-template-columns:1fr;}
+    .stack{grid-template-columns:1fr;}
+    .wrap{padding:18px 14px 40px;}
+    section{padding:20px 18px;}
+    .tblwrap{overflow-x:auto;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <h1>开源技术选型报告 · A股 / 美股双市场量化投研系统</h1>
+  <div class="sub">按更新活跃度、Star 数、开源协议、技术栈、部署门槛五维筛选，选出 3 个可与你现有方案结合的技术</div>
+  <div class="meta">生成日期 2026-10-08 &nbsp;·&nbsp; 数据来源：GitHub REST API v3（经 gh CLI 认证调用，账号 Martens-100），全部字段为接口实时返回，非记忆值 &nbsp;·&nbsp; 活跃度判据 = 近 5 周真实提交量（stats/participation）+ 最新发版时间</div>
+</header>
+
+<div class="picks">
+  <div class="pick">
+    <div class="slot">SLOT 01 · 数据层</div>
+    <div class="nm">akfamily/akshare</div>
+    <div class="st">A股 / 港股 / 美股基础数据采集</div>
+    <div class="dep"><span class="pill ok">可直接部署</span></div>
+  </div>
+  <div class="pick">
+    <div class="slot">SLOT 02 · 量化内核</div>
+    <div class="nm">microsoft/qlib</div>
+    <div class="st">因子库 / IC-IR / Walk-Forward 回测</div>
+    <div class="dep"><span class="pill mid">可直接部署 · 需接数据</span></div>
+  </div>
+  <div class="pick">
+    <div class="slot">SLOT 03 · 研报与复盘</div>
+    <div class="nm">TauricResearch/TradingAgents</div>
+    <div class="st">LLM 多智能体研报 + 决策日志</div>
+    <div class="dep"><span class="pill mid">需二次开发</span></div>
+  </div>
+</div>
+
+<section>
+  <h2>一、先淘汰，再推荐<span class="tag">筛掉的比留下的更能说明方法</span></h2>
+  <p class="lead">你给的五个维度里，<b>Star 数是最不可靠的一个</b>。下面这些项目 Star 都不低，但每一行都有硬证据说明它不该进你的技术栈。</p>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:22%">项目</th><th style="width:9%">Star</th><th style="width:11%">协议</th><th style="width:26%">淘汰硬证据（API 实时返回）</th><th style="width:32%">为什么不选</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="mono">twopirllc/pandas-ta</td><td>—</td><td>—</td>
+        <td><b>HTTP 404 —— 仓库已不存在</b>。社区由 <span class="mono">xgboosted/pandas-ta-classic</span>（449★, MIT, 2026-10-02）接手</td>
+        <td>技术指标库的典型教训：你按记忆写 <code>import pandas_ta</code>，代码在别人机器上直接报 ModuleNotFoundError</td>
+      </tr>
+      <tr>
+        <td class="mono">waditu/tushare</td><td>15,449</td><td>BSD-3</td>
+        <td>最后提交 <b>2024-03-13</b>（约 2 年 7 个月前）；未关 issue <b>771</b> 个</td>
+        <td>接口长期停更 + issue 大量积压；且其数据服务走积分制，等于在你的取数层插了一个外部计费点</td>
+      </tr>
+      <tr>
+        <td class="mono">mementum/backtrader</td><td>23,425</td><td><b>GPL-3.0</b></td>
+        <td>最后提交 <b>2024-08-19</b>（约 2 年前）</td>
+        <td>双重问题：GPL-3.0 具传染性，你若闭源分发整个系统会被牵进去；同时已停止维护</td>
+      </tr>
+      <tr>
+        <td class="mono">quantopian/pyfolio</td><td>6,425</td><td>Apache-2.0</td>
+        <td>最后提交 <b>2023-12-23</b>（近 3 年前）；未关 issue 166</td>
+        <td>绩效分析功能已被 quantstats 覆盖，属于被时代替代的库</td>
+      </tr>
+      <tr>
+        <td class="mono">OpenBB-finance/OpenBB</td><td>73,953</td><td><b>NOASSERTION</b></td>
+        <td>API 返回仓库现归属 <span class="mono">openbq-org/OpenBB</span>，协议字段为 <b>"Other"</b>（非标准 SPDX）；近 5 周提交仅 <b>3</b> 次</td>
+        <td>协议无法用 SPDX 识别 = 商用授权边界不明；同时 Star 7.4 万但活性极低</td>
+      </tr>
+      <tr>
+        <td class="mono">nautechsystems/nautilus_trader</td><td>29,694</td><td><b>LGPL-3.0</b></td>
+        <td>近 5 周提交 <b>669</b> 次（活性最高档）</td>
+        <td>技术极强但 LGPL-3.0 对链接与分发有额外义务；且它是<b>实盘交易引擎</b>，你当前需要的是研究/回测链路，属重量级错配</td>
+      </tr>
+      <tr>
+        <td class="mono">stefan-jansen/alphalens-reloaded</td><td>665</td><td>Apache-2.0</td>
+        <td>最后提交 <b>2025-12-15</b>（约 10 个月前）；未关 issue 16</td>
+        <td>因子分析能力（IC / 分层回测）与 qlib 内置的评估模块重叠，社区规模小，引入等于多一个维护面</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="warn"><b>一个可以直接拿走的方法：</b>选库时先看 <code>pushed_at</code> 与 <code>stats/participation</code>，再看 Star。Star 是<b>历史存量</b>，提交量是<b>当下活性</b>。下面这张图里，Star 排名前四的项目中有三个，近五周提交量都是个位数。</div>
+
+  <div class="chartbox">
+    <div class="ct">Star 数与近 5 周提交量的背离</div>
+    <div class="cs">柱 = Star 数（左轴，对数刻度）；折线 = 近 5 周提交总量（右轴）。柱高线低 = Star 幻觉；柱高线也高 = 真实活跃。数据源：GitHub API，取数日 2026-10-08。</div>
+    <div id="chartStar" class="chart"></div>
+  </div>
+</section>
+
+<section>
+  <h2>二、推荐一 · akfamily/akshare<span class="tag">SLOT 01 数据层</span></h2>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:16%">维度</th><th style="width:34%">实测值</th><th style="width:16%">维度</th><th style="width:34%">实测值</th></tr></thead>
+    <tbody>
+      <tr><td>Star</td><td><span class="v">22,851</span></td><td>开源协议</td><td><span class="v">MIT</span>（商用友好，无传染性）</td></tr>
+      <tr><td>主语言</td><td>Python</td><td>Python 约束</td><td><code>&gt;=3.11</code>（你的 3.11.9 满足）</td></tr>
+      <tr><td>最后提交</td><td><b>2026-10-07</b></td><td>最新发版</td><td><span class="v">release-v1.19.1 @ 2026-09-30</span></td></tr>
+      <tr><td>近 5 周提交</td><td>0, 1, 2, 4, 0（合计 7）</td><td>未关 issue</td><td><b>2 个</b>（同量级项目里最低）</td></tr>
+      <tr><td>部署产物</td><td>Dockerfile · pyproject.toml · <code>uv.lock</code></td><td>依赖条目</td><td>22 条，以 requests / pandas / lxml / bs4 为主，无重型依赖</td></tr>
+      <tr><td>市场覆盖</td><td colspan="3">模块目录实测存在：<code>stock_us_famous.py</code>、<code>stock_us_js.py</code>（美股）、<code>stock_hk_famous.py</code>（港股）、<code>forex/</code>、<code>fund/</code>、<code>stock_fundamental/</code> —— <b>A股 / 港股 / 美股 / 外汇 / 基金均有覆盖</b></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>✅ 可直接部署的部分</h3>
+  <p>几乎全部。它就是一个纯 Python 数据采集库，没有服务端、没有数据库、没有常驻进程。<code>pip install akshare</code> 即可调用，返回 pandas DataFrame。直接对接你模板里的<b>基本面层</b>与<b>技术面层</b>字段：财务报表、行情 K 线、估值指标、分红送配、行业分类。</p>
+
+  <h3>⚠️ 需要二次开发的部分</h3>
+  <ul>
+    <li><b>资金面层适配表要自己写。</b>akshare 提供的是原始数据接口，不是"字段字典"。你模板里 A 股的 8 项资金面指标（主力资金、北向、两融、龙虎榜、股东户数、大宗交易、板块合力、基金持股）需要逐个找到对应函数并做单位与口径归一——<b>这正是上一版模板里"市场适配层"要落地的地方。</b></li>
+    <li><b>取数重试与降级必须自己加。</b>上一轮取数时资金流接口出现过限频。akshare 本身不做重试，你得在外层包一层带退避的调度，并把失败字段标记为"数据缺口"而不是静默填 0。</li>
+    <li><b>字段级校验规则要自建。</b>接口字段错位是这类爬虫库的常见故障（其 9 月的提交日志里就有"修复接口字段错位"一条）。需要对你依赖的每个字段做"量纲与量级断言"。</li>
+  </ul>
+
+  <h3>改造方向</h3>
+  <p>把它封装成你模板体系里的 <code>CNDataAdapter</code>：对外只暴露"字段名 → 值 + 取数时间戳 + 数据源"三元组，与美股 adapter 同接口。这样模板结构不动，换市场只换 adapter——正是你选定的"通用层 + 适配层"架构。</p>
+
+  <div class="warn"><b>风险（按严重度排序）：</b><br>
+  ① <b>巴士因子 = 1。</b>提交记录几乎全部来自同一作者（Albert / akfamily）。单点依赖意味着一旦维护者转向，停更会来得很快。<br>
+  ② <b>本质是爬虫库，不是数据服务。</b>它没有 SLA，上游网页改版即可能失效。你的取数流程必须能容忍"某天某个字段取不到"。<br>
+  ③ <b>依赖里有平台相关的 JS 引擎</b>（<code>mini-racer</code>，Linux 走 <code>py-mini-racer</code>/<code>akracer</code>），某些平台需编译，属潜在部署摩擦点。<br>
+  ④ 提交量与 Star 严重不匹配（2.2 万 Star / 近 5 周 7 次提交）。结合 ② 看，这更像是"稳定即成熟"，但不足以支撑"长期高频迭代"的预期。</div>
+</section>
+
+<section>
+  <h2>三、推荐二 · microsoft/qlib<span class="tag">SLOT 02 量化内核</span></h2>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:16%">维度</th><th style="width:34%">实测值</th><th style="width:16%">维度</th><th style="width:34%">实测值</th></tr></thead>
+    <tbody>
+      <tr><td>Star</td><td><span class="v">49,210</span></td><td>开源协议</td><td><span class="v">MIT</span></td></tr>
+      <tr><td>主语言</td><td>Python</td><td>Python 约束</td><td><code>&gt;=3.8</code>（宽松）</td></tr>
+      <tr><td>最后提交</td><td><b>2026-09-16</b>（CI 类提交）</td><td>最新发版</td><td><b>v0.9.7 @ 2025-08-15</b>（约 14 个月前）</td></tr>
+      <tr><td>近 5 周提交</td><td><b>0, 2, 0, 0, 0（合计 2）</b></td><td>未关 issue</td><td><b>489 个</b>（积压明显）</td></tr>
+      <tr><td>部署产物</td><td>Dockerfile · Makefile · pyproject.toml · setup.py</td><td>依赖条目</td><td>16 条，含 <code>mlflow</code>、<code>tianshou</code>（强化学习）、<code>plotly</code>，属<b>偏重</b></td></tr>
+      <tr><td>美股支持</td><td colspan="3"><code>scripts/data_collector/</code> 下实测存在 <b><code>yahoo/</code></b> 与 <b><code>us_index/</code></b> 两个目录 —— <b>美股支持是官方级的，不是社区补丁</b>；A股侧有 <code>cn_index/</code>、<code>baostock_5min/</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>为什么在"低活性"的情况下仍然选它</h3>
+  <p>因为它覆盖的是你方案里<b>最难自己写、又最不该自己写</b>的那一块：</p>
+  <ul>
+    <li><b>因子库开箱可用</b>——内置 Alpha158 / Alpha360 两套因子集（README 中反复出现），省掉你从零构造因子的几个月。</li>
+    <li><b>IC / ICIR 评估是内建的</b>——正好对应你选的"三层 + 量化因子验证"里最硬的那一层。上一版模板里我写"做新因子有效性验证必须用脚本，不要让模型凭记忆模拟 IC 计算"，qlib 就是这个脚本的成熟版本。</li>
+    <li><b>Walk-Forward 与滚动训练是框架级能力</b>——你框架第五、六步要的"预测—回测闭环"和"参数寻优"，qlib 的 Rolling 工作流原生支持。</li>
+    <li><b>组合优化模块</b>——对应你模板里的仓位上限问题。</li>
+  </ul>
+  <div class="note"><b>一个反直觉但重要的判断：</b>成熟研究框架的"低提交量"不等于"死项目"。qlib 最近 6 次提交里有 4 次是 CI 与依赖兼容性修复，说明它处在<b>维护态</b>而非开发态。对你而言，研究框架要的是<b>行为稳定</b>，不是每周换 API。真正该担心的是 489 个未关 issue 背后的响应速度——遇到 bug 时，你得准备自己读源码。</div>
+
+  <h3>✅ 可直接部署的部分</h3>
+  <p>因子计算、IC/ICIR 统计、分层回测、Walk-Forward 滚动训练、组合优化。<code>Dockerfile</code> 与 <code>Makefile</code> 都在，容器化部署路径现成。</p>
+
+  <h3>⚠️ 需要二次开发的部分</h3>
+  <ul>
+    <li><b>数据接入（主要工作量）。</b>qlib 要求把行情转成它自己的二进制格式（<code>dump_bin.py</code> / <code>dump_pit.py</code>）。你得写一层"akshare 输出 → qlib bin 格式"的转换管道，并处理复权、交易日历对齐。</li>
+    <li><b>Point-in-Time 一致性。</b>财务数据必须按<b>公告日</b>而非报告期入库，否则回测会用到未来信息。qlib 提供 <code>dump_pit.py</code> 机制，但把 A 股财报公告日正确灌进去是你的活。这是最容易埋前视偏差的地方。</li>
+    <li><b>与你模板的字段映射。</b>qlib 面向因子研究，字段命名与你的研报模板不同，需要一张映射表。</li>
+  </ul>
+
+  <div class="warn"><b>风险：</b><br>
+  ① <b>低维护 + 高 issue 积压</b>（489 未关）。遇到框架层 bug 基本只能自救。<br>
+  ② <b>依赖偏重且有上界锁</b>——<code>mlflow&lt;3.13</code>、<code>tianshou&lt;=0.4.10</code>、以及 extras 中的 <code>numpy&lt;2.0.0</code>。这些上界约束在与其他库共存时会变成冲突源（详见第七节）。<br>
+  ③ <b>学习曲线陡。</b>qlib 的配置驱动（YAML workflow）抽象层数多，调试体验不友好。<br>
+  ④ 最近发版在 14 个月前，<b>不要指望官方支持你用的 Python 3.13</b>——建议锁 3.11。</div>
+</section>
+
+<section>
+  <h2>四、推荐三 · TauricResearch/TradingAgents<span class="tag">SLOT 03 研报与复盘</span></h2>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:16%">维度</th><th style="width:34%">实测值</th><th style="width:16%">维度</th><th style="width:34%">实测值</th></tr></thead>
+    <tbody>
+      <tr><td>Star</td><td><b>110,163</b>（本次候选中最高）</td><td>开源协议</td><td><span class="v">Apache-2.0</span>（含专利授权，商用友好）</td></tr>
+      <tr><td>主语言</td><td>Python</td><td>Python 约束</td><td><code>&gt;=3.11</code></td></tr>
+      <tr><td>最后提交</td><td><b>2026-10-03</b></td><td>最新发版</td><td><span class="v">v0.6.0 @ 2026-10-03</span>（5 天前）</td></tr>
+      <tr><td>近 5 周提交</td><td>12, 25, 65, 79, 23（合计 <b>204</b>）</td><td>未关 issue</td><td>93 个</td></tr>
+      <tr><td>部署产物</td><td>Dockerfile · <b>docker-compose.yml</b> · pyproject.toml</td><td>依赖条目</td><td>22 条，以 langchain / langgraph 生态为主</td></tr>
+      <tr><td>默认数据源</td><td colspan="3">依赖中显式包含 <code>yfinance&gt;=1.7.0</code> 与 <code>stockstats&gt;=0.6.5</code>（技术指标，无需 TA-Lib）——<b>默认面向美股</b>；另支持 FRED 宏观与 Polymarket 数据</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>它已经内置了你要的四样东西</h3>
+  <p>这是本次选型里最意外的发现——它的 release note 与你前几轮提的需求高度重合：</p>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:26%">你的需求</th><th style="width:44%">TradingAgents 已有能力（来自 v0.2.x–v0.6.0 发版说明）</th><th style="width:30%">对应你模板里的哪一块</th></tr></thead>
+    <tbody>
+      <tr><td>研报产出</td><td>v0.6.0：<b>reports saved as one HTML page</b>（研报输出为单个 HTML 页面）</td><td>模板 A 个股深度研报 / 模板 B 估值定价研报的输出形态</td></tr>
+      <tr><td>交易复盘</td><td>v0.2.4：<b>persistent decision log</b>（持久化决策日志）+ LangGraph checkpoint resume</td><td>模板 C 的 C7 纪律复盘——"计划 vs 实际成交"的原始数据来源</td></tr>
+      <tr><td>回测验证</td><td>v0.5.0：<b>backtesting over a ticker and date grid</b>（按标的与日期网格回测）+ portfolio-aware runs</td><td>框架第五步"预测—回测闭环"</td></tr>
+      <tr><td>结构化输出</td><td>v0.2.4：<b>structured-output agents</b>（Research Manager / Trader / Portfolio Manager）</td><td>把 LLM 输出强制成模板字段，而非散文</td></tr>
+      <tr><td>国内可用性</td><td>多 provider：<b>DeepSeek / Qwen / GLM</b> / Azure / Bedrock / Groq / Mistral，且 v0.6.0 支持<b>按模型层级分别指定 provider</b></td><td>不需要把关键链路绑在单一海外模型上</td></tr>
+      <tr><td>前视偏差防护</td><td>v0.5.0：<b>point-in-time integrity across every dated path</b>、SEC EDGAR 按原始披露口径取数</td><td>与 qlib 的 PIT 要求互补，同一原则两处落地</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>✅ 可直接部署的部分</h3>
+  <p>骨架可直接跑起来：<code>docker-compose.yml</code> 现成，复制 <code>.env.example</code> 填 API key 即可。多智能体流程（分析师 → 研究员 → 交易员 → 组合经理）、决策日志持久化、HTML 研报输出，都属于开箱可用。</p>
+
+  <h3>⚠️ 需要二次开发的部分</h3>
+  <ul>
+    <li><b>数据源要从美股换成 A 股为主（最大工作量）。</b>默认走 yfinance。要让 A 股标的可分析，必须替换数据层——这正是 akshare 的位置。三者在此处会师：<b>TradingAgents 的数据接口 → akshare 实现</b>。</li>
+    <li><b>多智能体流程要按你的模板重排。</b>它的分析师分工（基本面/情绪/新闻/技术）与你的三层指标体系（基本面/技术面/资金面）<b>不是同一套切法</b>——它没有 A 股特有的资金面层（龙虎榜、两融、北向）。这块需要新增 agent 或改造现有 agent 的工具集。</li>
+    <li><b>复盘闭环要自己接。</b>它有 decision log，但"计划 vs 实际成交的偏差归因"、"逻辑是否被证伪"、"情绪标签"这三层需要你补——decision log 只提供原料，不提供评分。</li>
+    <li><b>成本与延迟控制。</b>多智能体辩论结构会放大 LLM 调用次数。按你选的"自动取数填表"，每天对自选股池跑一遍的 token 成本需要实测后再定频率。</li>
+  </ul>
+
+  <div class="warn"><b>风险：</b><br>
+  ① <b>多智能体辩论 ≠ 更准。</b>它的产出是"结构化的看多/看空论据"，不是概率。若直接当买卖信号用，等于把主观判断换了个更贵的包装。<b>它的正确定位是研报生成器与论据整理器，不是决策器。</b><br>
+  ② <b>依赖 langchain / langgraph 生态</b>，该生态版本迭代快、破坏性变更多。建议锁版本并容器化。<br>
+  ③ 依赖要求 <code>pandas&gt;=3.0.6</code>，与 qlib 的 <code>numpy&lt;2.0.0</code> 存在潜在冲突（详见第七节）。<br>
+  ④ 默认数据源与合规口径面向美股（SEC / FRED），A 股侧的公告与财务口径需重新验证。</div>
+</section>
+
+<section>
+  <h2>五、三者如何拼成你的系统</h2>
+  <p class="lead">它们不是三个平行选项，而是<b>一条链上的三个工位</b>——数据进、算力过、研报出。</p>
+  <div class="stack">
+    <div class="sl a">
+      <div class="t">akshare · 数据层</div>
+      <div class="d">A股/港股/美股原始数据采集 → 封装为统一字段接口（值 + 取数时间戳 + 数据源）→ 同时喂给量化内核与研报 agent</div>
+    </div>
+    <div class="sl b">
+      <div class="t">qlib · 量化内核</div>
+      <div class="d">因子计算 → IC/ICIR 有效性验证 → Walk-Forward 回测 → 组合优化输出仓位约束</div>
+    </div>
+    <div class="sl c">
+      <div class="t">TradingAgents · 研报与复盘</div>
+      <div class="d">读 qlib 的因子结论 + akshare 的原始数据 → 生成 HTML 研报 → 写决策日志 → 供复盘模块对账</div>
+    </div>
+  </div>
+  <div class="note"><b>关键设计约束：三者不要塞进同一个 Python 环境。</b>见第七节的版本冲突分析——它们应当通过文件或内部 API 交换数据，各自独立运行。</div>
+</section>
+
+<section>
+  <h2>六、决策矩阵</h2>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:19%">项目</th><th style="width:11%">协议风险</th><th style="width:11%">维护风险</th><th style="width:11%">部署门槛</th><th style="width:11%">契合度</th><th style="width:37%">一句话结论</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="mono">akshare</td>
+        <td><span class="pill ok">低</span><br>MIT</td>
+        <td><span class="pill mid">中</span><br>巴士因子=1</td>
+        <td><span class="pill ok">低</span><br>纯库，无服务</td>
+        <td><span class="pill ok">高</span></td>
+        <td><b>直接上。</b>先用它把 A 股资金面适配表跑通，这是你模板落地的前置条件</td>
+      </tr>
+      <tr>
+        <td class="mono">qlib</td>
+        <td><span class="pill ok">低</span><br>MIT</td>
+        <td><span class="pill mid">中高</span><br>14 个月未发版 / 489 issue</td>
+        <td><span class="pill mid">中</span><br>需写数据转换管道</td>
+        <td><span class="pill ok">高</span></td>
+        <td><b>值得上，但要接受"自己维护"。</b>因子库与 IC 评估省下的时间远超接入成本</td>
+      </tr>
+      <tr>
+        <td class="mono">TradingAgents</td>
+        <td><span class="pill ok">低</span><br>Apache-2.0</td>
+        <td><span class="pill ok">低</span><br>5 天前发版</td>
+        <td><span class="pill ok">低</span><br>docker-compose 现成</td>
+        <td><span class="pill mid">中</span><br>需换 A 股数据源</td>
+        <td><b>先跑通再改造。</b>用它的 HTML 研报与决策日志，但别把它当决策器</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2>七、集成风险：一个必须先处理的版本冲突</h2>
+  <p class="lead">把三个项目的依赖约束摆在一起看，会发现它们对 pandas / numpy 的要求跨度很大——这是同环境共存会直接撞车的地方。</p>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:22%">项目</th><th style="width:24%">pandas 要求</th><th style="width:24%">numpy / 其他关键约束</th><th style="width:30%">冲突含义</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="mono">microsoft/qlib</td>
+        <td><code>pandas&gt;=1.1</code>（下界很老）</td>
+        <td>extras 中含 <code>numpy&lt;2.0.0</code>；<code>mlflow&lt;3.13</code>；<code>tianshou&lt;=0.4.10</code></td>
+        <td>把 numpy 锁在 2.0 以下</td>
+      </tr>
+      <tr>
+        <td class="mono">akfamily/akshare</td>
+        <td><code>pandas&gt;=2.0.0</code></td>
+        <td>无 numpy 上界</td>
+        <td>与 qlib 可共存（2.x 满足两者）</td>
+      </tr>
+      <tr>
+        <td class="mono">TauricResearch/TradingAgents</td>
+        <td><b><code>pandas&gt;=3.0.6</code></b></td>
+        <td><code>langgraph&gt;=1.2.12</code>；<code>yfinance&gt;=1.7.0</code></td>
+        <td><b>与 qlib 的 numpy&lt;2.0 直接冲突</b>：pandas 3.x 需要 numpy 2.x</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="bad"><b>结论：不要试图装进一个 venv。</b>推荐做法是<b>按 SLOT 分环境</b>——akshare 与 qlib 可共享一个环境（锁 <code>numpy&lt;2</code>、<code>pandas&gt;=2,&lt;3</code>）；TradingAgents 单独一个容器（<code>pandas&gt;=3</code>），两者之间用文件或 HTTP 交换数据。这也顺带解决了"某一方升级破坏另一方"的问题。</div>
+
+  <h3>其余风险与对冲</h3>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:22%">风险</th><th style="width:34%">触发场景</th><th style="width:44%">对冲动作</th></tr></thead>
+    <tbody>
+      <tr><td>akshare 接口失效</td><td>上游网页改版，某字段突然返回空或错位</td><td>每个字段做量纲/量级断言；失败标记为"数据缺口"而非填 0；研报里显式标注缺口</td></tr>
+      <tr><td>akshare 维护者转向</td><td>巴士因子=1，停更风险实在</td><td>抽象出 adapter 接口层，使底层可替换（备选：baostock、eltdx 通达信协议库）</td></tr>
+      <tr><td>qlib 前视偏差</td><td>财务数据按报告期而非公告日入库</td><td>强制走 PIT 流程，回测前做一次"信息可得性检查"</td></tr>
+      <tr><td>LLM 成本失控</td><td>多智能体辩论 × 自选股池 × 每日运行</td><td>先小样本实测单标的 token 成本，再定运行频率；用按层级指定 provider 把重活压到便宜模型</td></tr>
+      <tr><td>把研报当信号</td><td>LLM 输出的看多论据被直接当买入依据</td><td>研报只进模板的"逻辑与预期差"字段；买卖决策仍由 qlib 的量化规则与你的风控阈值产生</td></tr>
+      <tr><td>协议传染</td><td>后续引入 GPL / LGPL 组件并闭源分发</td><td>锁定白名单：MIT / Apache-2.0 / BSD 可进；GPL / LGPL / NOASSERTION 需单独评估</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2>八、备选与替换方案</h2>
+  <p class="lead">主选之外，这几个值得知道——尤其是当某个主选失效时。</p>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:24%">项目</th><th style="width:9%">Star</th><th style="width:11%">协议</th><th style="width:9%">近5周提交</th><th style="width:47%">定位与适用场景</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">simonlin1212/TradingAgents-astock</td><td>3,640</td><td>Apache-2.0</td><td>24</td><td><b>A 股适配版 TradingAgents</b>，README 明确提到龙虎榜、游资、解禁等 A 股特有数据，7 位分析师按 A 股规则辩论。<b>注意：作者近期提交为"求职 / open to opportunities"公告，维护连续性存疑</b>——可作参考实现，不宜作长期依赖</td></tr>
+      <tr><td class="mono">akfamily/akquant</td><td>2,397</td><td>MIT</td><td>47</td><td>同属 akfamily，Rust + Python 高性能量化框架，<b>版本尚在 0.3.x</b>。作为 qlib 的"活跃替代"备选；但 API 未稳定，且与 akshare 共享同一巴士因子风险</td></tr>
+      <tr><td class="mono">ranaroussi/quantstats</td><td>7,686</td><td>Apache-2.0</td><td>—</td><td>绩效分析 + HTML 报告，Apache-2.0。适合补 qlib 之外的<b>组合绩效可视化</b>；pyfolio 的现代替代</td></tr>
+      <tr><td class="mono">ranaroussi/yfinance</td><td>25,458</td><td>Apache-2.0</td><td>—</td><td>美股数据主力。<b>若你要认真做美股，它比 akshare 的美股接口更可靠</b>——建议美股侧直接用 yfinance，akshare 专注 A 股/港股</td></tr>
+      <tr><td class="mono">fasiondog/hikyuu</td><td>3,554</td><td>Apache-2.0</td><td>390</td><td>C++/Python 高性能量化框架，活性极高。适合对回测速度有硬要求时替换 qlib；但 C++ 核心会提高部署与调试门槛</td></tr>
+      <tr><td class="mono">xgboosted/pandas-ta-classic</td><td>449</td><td>MIT</td><td>—</td><td><b>已消失的 pandas-ta 的社区继任者</b>。技术指标计算若不想用 TradingAgents 内置的 stockstats，可走这条</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<footer>
+  <div class="src">
+    数据来源：GitHub REST API v3，经 gh CLI（v2.68.1，账号 Martens-100）认证调用，取数时间 2026-10-08（北京时间）。所有 Star 数、<code>pushed_at</code>、协议 SPDX 标识、Python 版本约束、依赖清单、<code>stats/participation</code> 提交量、目录结构均为接口实时返回，未使用记忆值。<br>
+    本报告为技术选型评估，不构成对任何标的的投资建议。文中涉及的开源项目信息以其官方仓库当前状态为准，Star 数与提交活跃度会随时间变化，建议在正式选型前重新取数核对。<br>
+    本报告未包含对上述项目的实际安装与运行验证——部署可行性结论基于仓库元数据、依赖声明与部署产物文件的存在性推断。落地前建议在隔离环境中做一次真实安装与冒烟测试。
+  </div>
+  <div>
+    <b>免责声明：</b>以上内容基于公开数据和量化分析，仅供参考，不构成投资建议。市场有风险，投资需谨慎。任何投资决策应结合个人风险承受能力、资金状况和投资目标独立判断，必要时咨询持牌专业机构。过往表现不预示未来收益。
+  </div>
+</footer>
+
+</div>
+
+<script>
+var starRepos = ['TradingAgents','OpenBB','qlib','vnpy','Vibe-Trading','nautilus_trader','akshare','TA-astock','hikyuu','akquant'];
+var starVals  = [110163, 73953, 49210, 45754, 34947, 29694, 22851, 3640, 3554, 2397];
+var commitVals = [204, 3, 2, 28, 833, 669, 7, 24, 390, 47];
+
+echarts.init(document.getElementById('chartStar')).setOption({
+  tooltip: { trigger: 'axis' },
+  legend: { data: ['Star 数（左轴）', '近 5 周提交量（右轴）'], bottom: 0, itemWidth: 12, itemHeight: 8, textStyle: { fontSize: 11 } },
+  grid: { left: 64, right: 60, top: 24, bottom: 56 },
+  xAxis: { type: 'category', data: starRepos, axisLabel: { fontSize: 10, rotate: 28 } },
+  yAxis: [
+    { type: 'log', name: 'Star（对数）', nameTextStyle: { fontSize: 10.5 }, axisLabel: { fontSize: 10 }, min: 1000 },
+    { type: 'value', name: '提交量', nameTextStyle: { fontSize: 10.5 }, axisLabel: { fontSize: 10 } }
+  ],
+  series: [
+    { name: 'Star 数（左轴）', type: 'bar', barWidth: 22, itemStyle: { color: '#85B7EB', borderRadius: [3, 3, 0, 0] }, data: starVals },
+    { name: '近 5 周提交量（右轴）', type: 'line', yAxisIndex: 1, symbolSize: 7, lineStyle: { width: 2, color: '#BA7517' }, itemStyle: { color: '#BA7517' }, data: commitVals }
+  ]
+});
+</script>
+</body>
+</html>

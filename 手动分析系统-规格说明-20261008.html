@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>手动输入型股票分析系统 · 规格说明</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+  :root{
+    --ink:#16181d; --ink2:#4a4f5a; --ink3:#828a97;
+    --line:#e3e6ec; --line2:#f0f2f6;
+    --bg:#f6f7f9; --card:#ffffff;
+    --accent:#1f5fa8; --accent-bg:#eef4fb;
+    --warn:#a35b00; --warn-bg:#fdf5e6;
+    --bad:#a3272b; --bad-bg:#fdeeee;
+    --ok:#1e6b3f; --ok-bg:#eaf5ee;
+    --purple:#534AB7; --purple-bg:#efedfb;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:14px;line-height:1.72;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1100px;margin:0 auto;padding:32px 24px 64px;}
+  header.top{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:28px 30px;margin-bottom:20px;}
+  header.top h1{margin:0 0 8px;font-size:23px;font-weight:600;letter-spacing:-.2px;}
+  header.top .sub{color:var(--ink2);font-size:13.5px;margin-bottom:14px;}
+  header.top .meta{color:var(--ink3);font-size:12.5px;border-top:1px solid var(--line2);padding-top:12px;}
+  section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:26px 30px;margin-bottom:20px;}
+  h2{font-size:17px;font-weight:600;margin:0 0 6px;letter-spacing:-.1px;}
+  h2 .tag{font-size:11.5px;font-weight:500;color:var(--accent);background:var(--accent-bg);
+    border-radius:5px;padding:2px 7px;margin-left:8px;vertical-align:2px;}
+  h3{font-size:14.5px;font-weight:600;margin:22px 0 10px;}
+  h3:first-of-type{margin-top:14px;}
+  h4{font-size:13.5px;font-weight:600;margin:18px 0 8px;}
+  p{margin:8px 0;}
+  .lead{color:var(--ink2);font-size:13.5px;margin-bottom:14px;}
+  ul,ol{margin:8px 0;padding-left:22px;}
+  li{margin:5px 0;}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0;}
+  th{background:#fafbfc;color:var(--ink2);font-weight:600;text-align:left;
+    padding:9px 11px;border-bottom:1.5px solid var(--line);font-size:12.5px;white-space:nowrap;}
+  td{padding:9px 11px;border-bottom:1px solid var(--line2);vertical-align:top;}
+  tr:last-child td{border-bottom:none;}
+  td.mono,th.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;}
+  .v{font-weight:600;}
+  .pill{display:inline-block;font-size:11.5px;padding:1px 7px;border-radius:5px;line-height:1.6;white-space:nowrap;}
+  .pill.ok{background:var(--ok-bg);color:var(--ok);}
+  .pill.mid{background:var(--warn-bg);color:var(--warn);}
+  .pill.bad{background:var(--bad-bg);color:var(--bad);}
+  .pill.info{background:var(--accent-bg);color:var(--accent);}
+  .pill.pur{background:var(--purple-bg);color:var(--purple);}
+  .pill.gray{background:#f1f0ea;color:#5F5E5A;}
+  .note{background:var(--accent-bg);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;
+    padding:12px 16px;font-size:13px;color:#1c3d63;margin:14px 0;}
+  .warn{background:var(--warn-bg);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;
+    padding:12px 16px;font-size:13px;color:#6b3d00;margin:14px 0;}
+  .bad{background:var(--bad-bg);border-left:3px solid var(--bad);border-radius:0 8px 8px 0;
+    padding:12px 16px;font-size:13px;color:#6d1a1d;margin:14px 0;}
+  .note b,.warn b,.bad b{font-weight:600;}
+  .flow{display:flex;align-items:stretch;gap:0;margin:16px 0;flex-wrap:wrap;}
+  .step{flex:1;min-width:110px;border:1px solid var(--line);border-radius:10px;
+    padding:12px 13px;background:#fafbfc;}
+  .step .sn{font-size:11px;color:var(--ink3);font-weight:600;letter-spacing:.4px;}
+  .step .st{font-size:13px;font-weight:600;margin:3px 0;}
+  .step .sd{font-size:11.5px;color:var(--ink2);line-height:1.55;}
+  .arrow{display:flex;align-items:center;padding:0 6px;color:var(--ink3);font-size:15px;}
+  .sig{border:1px solid var(--line);border-radius:11px;padding:14px 16px;margin:12px 0;}
+  .sig.m{background:#f7fafd;border-color:#d5e2f0;}
+  .sig.q{background:#f5faf7;border-color:#cfe3cf;}
+  .sig.f{background:#fbf8f5;border-color:#eeddc6;}
+  .sig .st{font-weight:600;font-size:14px;margin-bottom:4px;}
+  .sig.m .st{color:var(--accent);}
+  .sig.q .st{color:var(--ok);}
+  .sig.f .st{color:#9a5b12;}
+  .sig .sd{font-size:12.5px;color:var(--ink2);margin-bottom:8px;}
+  .dim{border-left:3px solid var(--line);padding:2px 0 2px 14px;margin:12px 0;}
+  .dim.d1{border-color:#378ADD;} .dim.d2{border-color:#1D9E75;}
+  .dim.d3{border-color:#BA7517;} .dim.d4{border-color:#534AB7;}
+  .dim .dt{font-size:13px;font-weight:600;margin-bottom:2px;}
+  .dim .dd{font-size:12.5px;color:var(--ink2);}
+  .chartbox{border:1px solid var(--line);border-radius:11px;padding:14px 14px 6px;margin:14px 0;}
+  .chartbox .ct{font-size:13px;font-weight:600;margin-bottom:2px;}
+  .chartbox .cs{font-size:11.5px;color:var(--ink3);margin-bottom:8px;line-height:1.5;}
+  .chart{width:100%;height:320px;}
+  footer{margin-top:8px;padding:20px 30px;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;font-size:12.5px;color:var(--ink2);line-height:1.75;}
+  footer .src{color:var(--ink3);font-size:12px;margin-bottom:10px;}
+  @media(max-width:880px){
+    .wrap{padding:18px 14px 40px;}
+    section{padding:20px 18px;}
+    .tblwrap{overflow-x:auto;}
+    .flow{flex-direction:column;}
+    .arrow{transform:rotate(90deg);padding:4px 0;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <h1>手动输入型股票分析系统 · 规格说明</h1>
+  <div class="sub">输入股票名称 → 四维分析 → 个股研报 → 三类信号 → 操作建议 → 双向复盘</div>
+  <div class="meta">版本 v1.0 &nbsp;·&nbsp; 生成 2026-10-08 &nbsp;·&nbsp; 实现：<code>qsys/src/qsys/analysis/</code>（5 个模块，97 个测试全部通过）&nbsp;·&nbsp; 演示标的：002422 科伦药业（真实取数数据）</div>
+</header>
+
+<section>
+  <h2>零、整体流程</h2>
+  <p class="lead">系统采用<b>手动输入</b>而非自动推荐。这个选择决定了两个设计后果：解析必须防猜错，分析必须可审计。</p>
+  <div class="flow">
+    <div class="step"><div class="sn">STEP 1</div><div class="st">输入名称</div><div class="sd">解析为代码，置信度不足则拒绝执行</div></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="sn">STEP 2</div><div class="st">四维分析</div><div class="sd">研报 / 行业 / 现金流 / 壁垒</div></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="sn">STEP 3</div><div class="st">个股研报</div><div class="sd">结构化字段 + 发现 + 缺口 + 警示</div></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="sn">STEP 4</div><div class="st">三类信号</div><div class="sd">监控 / 量化 / 多因子</div></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="sn">STEP 5</div><div class="st">操作建议</div><div class="sd">按优先级映射，附判定链</div></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="sn">STEP 6</div><div class="st">复盘</div><div class="sd">执行 / 未执行双向</div></div>
+  </div>
+
+  <div class="note"><b>为什么"手动输入"是个关键约束：</b>自动推荐系统可以容忍标的解析错误（反正会推荐很多个）；手动输入不能 —— <b>猜错一个标的，后面所有分析都会基于错误的公司</b>。因此解析器在置信度低于 85% 或存在近似候选时，会直接中止并要求人工确认，而不是"猜一个最像的"。</div>
+</section>
+
+<section>
+  <h2>一、四个分析模块的输出结构<span class="tag">统一结构，便于信号层同构处理</span></h2>
+  <p class="lead">四个模块返回<b>同一个数据结构</b> <code>ModuleOutput</code>。统一结构的目的是让信号层不必为每个模块写适配逻辑。</p>
+
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:16%">字段</th><th style="width:10%">类型</th><th style="width:74%">含义</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">module</td><td>str</td><td>模块名（研报分析 / 行业分析 / 现金流分析 / 核心壁垒）</td></tr>
+      <tr><td class="mono">score</td><td>float</td><td>0–100 分。缺口过多时返回 <b>0</b> 并标记不可用 —— 宁可说"数据不足"，也不给半截数据算出的分数</td></tr>
+      <tr><td class="mono">grade</td><td>str</td><td>等级。研报/行业/现金流用 A/B/C/D；壁垒用 <b>宽/窄/无</b></td></tr>
+      <tr><td class="mono">fields</td><td>dict</td><td>结构化字段，供研报与信号层消费</td></tr>
+      <tr><td class="mono">findings</td><td>list</td><td>关键发现（人读）。每条必须是<b>可证伪的陈述</b>，不是形容词</td></tr>
+      <tr><td class="mono">gaps</td><td>list</td><td><b>数据缺口</b>。必须显式列出，缺口字段不得进入决策</td></tr>
+      <tr><td class="mono">caveats</td><td>list</td><td><b>警示</b>。如"研报为非一手来源，需核实原文"</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>模块 A · 研报分析</h3>
+  <p><b>回答的问题：</b>市场已经定价了什么？预期差在哪？</p>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:22%">字段</th><th style="width:46%">计算 / 含义</th><th style="width:32%">判据与警示</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">upside_pct</td><td>(一致目标价 / 现价 − 1) × 100</td><td>—</td></tr>
+      <tr><td class="mono">target_spread_pct</td><td>(最高目标价 − 最低目标价) / 均值 × 100</td><td><b>&gt;80% 说明卖方未收敛</b>，一致预期不可靠</td></tr>
+      <tr><td class="mono">rating_buy_pct</td><td>近 6 个月买入/增持占比</td><td><b>≥95% 时扣分</b> —— 全体一致意味着该信号失去区分度</td></tr>
+      <tr><td class="mono">coverage_count</td><td>覆盖机构数</td><td>&lt;5 家时样本过小，代表性弱</td></tr>
+      <tr><td class="mono">eps_cagr_pct</td><td>预测 EPS 年化增速</td><td>—</td></tr>
+      <tr><td class="mono">has_site_visit</td><td>是否有机构调研记录</td><td>无调研时研报可能是基于公开信息推演</td></tr>
+      <tr><td colspan="3"><b>固定警示：</b>研报属<b>非一手来源</b>，引用需核实原文，不得与公司公告同等处理</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>模块 B · 所属行业</h3>
+  <p><b>回答的问题：</b>这家公司在它自己的赛道里排第几？<br>
+  <span style="color:var(--ink3);font-size:12.5px">为什么不能跳过：毛利率 47% 在医药是常态、在零售是异常。脱离行业谈估值无效。</span></p>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:22%">字段</th><th style="width:36%">取值</th><th style="width:42%">评分映射</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">lifecycle_stage</td><td>导入 / 成长 / 成熟 / 下行</td><td>60 / <b>90</b> / 65 / <b>25</b></td></tr>
+      <tr><td class="mono">company_position</td><td>龙头 / 细分龙头 / 追赶者 / 边缘</td><td><b>95</b> / 80 / 55 / <b>25</b></td></tr>
+      <tr><td class="mono">competitive_intensity</td><td>low / medium / high</td><td>85 / 65 / 40</td></tr>
+      <tr><td class="mono">industry_margin_trend</td><td>up / flat / down</td><td>85 / 60 / 30</td></tr>
+      <tr><td class="mono">industry_revenue_growth</td><td>行业中位营收增速 %</td><td>±15 分内线性加减</td></tr>
+      <tr><td class="mono">relative_strength_60d</td><td>相对行业指数强弱 %</td><td>±10% 为显著</td></tr>
+      <tr><td class="mono">sector_flow</td><td>板块资金 in / out / neutral</td><td>辅助字段</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>模块 C · 现金流</h3>
+  <p><b>回答的问题：</b>利润是真的吗？<br>
+  <span style="color:var(--ink3);font-size:12.5px">这是四模块里最能识别"纸面利润"的一个。实证：科伦药业 2026H1 归母 +12.71% 而扣非 −29.03%。</span></p>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:24%">字段</th><th style="width:34%">计算</th><th style="width:42%">判据</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">现金含量</td><td>经营现金流净额 / 归母净利</td><td><b>&lt;0.8 时判定"利润未有效转化为现金"</b></td></tr>
+      <tr><td class="mono">自由现金流</td><td>经营现金流 − 资本开支</td><td>为负 = 扩张期特征，但需确认开支能形成未来收益</td></tr>
+      <tr><td class="mono">经营现金流序列</td><td>近 3 期趋势</td><td>连续改善 / 连续恶化</td></tr>
+      <tr><td class="mono">有息负债/经营现金流</td><td>有息负债 ÷ 经营现金流</td><td>&gt;3 年偿债压力偏高</td></tr>
+      <tr><td class="mono">应收/营收</td><td>应收 ÷ 营收 × 100</td><td>&gt;50% 提示增长可能靠放宽账期换取</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>模块 D · 核心技术壁垒</h3>
+  <p><b>回答的问题：</b>说出壁垒是什么，说不出就是没有。</p>
+  <div class="bad"><b>硬约束（两条，都会强制降级）：</b><br>
+  ① <code>moat_source</code> 为空 → 无论其他字段多好看，等级强制为「<b>无</b>」，得分 10。理由：壁垒必须可命名，说不出就是没有。<br>
+  ② <b>ROIC &lt; WACC → 得分硬上限 45</b>（等级封顶「无」）。理由：壁垒若真实存在，必然体现在资本回报上。<br>
+  <span style="font-size:12.5px">第 ② 条来自一次实测：早期版本用纯加权计分，类型分 85 + 证据分 15 + 持续性 10 足以把 ROIC 的负分淹没，得出「壁垒宽」而发现里写着「壁垒存疑」—— 自相矛盾。硬上限用来消除这种矛盾。</span></div>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:24%">字段</th><th style="width:34%">取值</th><th style="width:42%">评分映射</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">moat_type</td><td>技术专利 / 规模成本 / 网络效应 / 牌照 / 品牌 / 客户粘性 / 无</td><td>85 / 80 / <b>90</b> / 75 / 70 / 75 / 10</td></tr>
+      <tr><td class="mono">moat_source</td><td>具体来源（<b>必须可命名</b>）</td><td>为空则等级强制「无」</td></tr>
+      <tr><td class="mono">durability_years</td><td>持续性估计（年）</td><td>≥5 年 +10；&lt;3 年 −10 并警示</td></tr>
+      <tr><td class="mono">ROIC − WACC</td><td>资本回报溢价</td><td>&gt;5pct 优秀；<b>&lt;0 触发硬上限 45</b></td></tr>
+      <tr><td class="mono">rd_expense_ratio</td><td>研发费用率 + 与同业对比</td><td>低于同业时警示可持续性</td></tr>
+      <tr><td class="mono">substitute_count</td><td>替代方案数量</td><td>≥3 个 −15 分</td></tr>
+      <tr><td class="mono">evidence</td><td>可验证证据列表</td><td>无证据时标注"属叙述性主张，非事实"</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>四维综合权重</h3>
+  <div class="note"><b>现金流 30% · 壁垒 25% · 行业 25% · 研报 20%</b><br>
+  依据：现金流与壁垒是<b>慢变量</b>（决定能不能买），研报与行业是<b>快变量</b>（决定什么时候买、市场怎么看）。慢变量给更高权重，避免被短期预期牵着走。</div>
+</section>
+
+<section>
+  <h2>二、三类信号的定义与输出结构<span class="tag">互不重叠</span></h2>
+  <p class="lead">三类信号各自回答一个不同的问题。<b>它们不是三个并列的指标，而是三个不同的职责。</b></p>
+
+  <div class="sig m">
+    <div class="st">① 监控信号 MonitorSignal</div>
+    <div class="sd"><b>回答：</b>有什么变化需要我知道。<br>
+    <b>性质：</b>事件驱动 / 阈值告警。<b>不直接产生买卖动作</b>，只改变"观察状态"，进而影响量化信号能否被执行。</div>
+    <div class="tblwrap">
+    <table>
+      <thead><tr><th style="width:18%">字段</th><th style="width:12%">取值</th><th style="width:70%">说明</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">level</td><td><span class="pill info">info</span> <span class="pill mid">warning</span> <span class="pill bad">critical</span></td><td>info 仅记录；warning 禁止加仓；<b>critical 暂缓一切动作</b></td></tr>
+        <tr><td class="mono">trigger</td><td>文本</td><td>触发原因，如"财报临近披露""买入假设被证伪"</td></tr>
+        <tr><td class="mono">window</td><td>文本</td><td><b>必须提供</b> —— 无时间窗则无法排期执行</td></tr>
+        <tr><td class="mono">implication</td><td>文本</td><td>这个信号意味着什么动作约束</td></tr>
+        <tr><td class="mono">source</td><td>文本</td><td>来源，便于追溯</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p style="font-size:12.5px;color:var(--ink3);margin:6px 0 0">
+    当前实现的 6 类触发：停牌、买入假设被证伪、财报临近（≤5 天）、接近涨跌停（&lt;1.5%）、数据缺口、阈值待校准。</p>
+  </div>
+
+  <div class="sig q">
+    <div class="st">② 量化信号 QuantSignal</div>
+    <div class="sd"><b>回答：</b>规则说该做什么。<br>
+    <b>性质：</b>可执行、有明确价位。由确定性代码产生，<b>无解释空间</b>。</div>
+    <div class="tblwrap">
+    <table>
+      <thead><tr><th style="width:22%">字段</th><th style="width:16%">取值</th><th style="width:62%">说明</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">action</td><td><code>entry</code> / <code>wait</code> / <code>block</code> / <code>exit</code></td><td>四种，不含"观察""关注"这类模糊词</td></tr>
+        <tr><td class="mono">tier_decided</td><td>trend / momentum / extreme</td><td>由哪一级信号决定</td></tr>
+        <tr><td class="mono">stop_price</td><td>float</td><td>生效止损位（结构位与 ATR 位取更近者）</td></tr>
+        <tr><td class="mono">effective_stop_type</td><td>structure / atr / logic</td><td>哪一条生效</td></tr>
+        <tr><td class="mono">standard_position_pct</td><td>float</td><td>标准风险预算法结果</td></tr>
+        <tr><td class="mono">worst_case_position_pct</td><td>float</td><td><b>制度修正版结果</b>（考虑连续跌停无法成交）</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p style="font-size:12.5px;color:var(--ink3);margin:6px 0 0">
+    实测差异：科伦药业标准法 8.18% → 制度修正版 3.64%，折减 55.5%。</p>
+  </div>
+
+  <div class="sig f">
+    <div class="st">③ 多因子信号 FactorSignal</div>
+    <div class="sd"><b>回答：</b>这只股票在同类里排第几。<br>
+    <b>性质：</b>相对比较，不是绝对判断。<b>只影响仓位大小，不影响方向。</b></div>
+    <div class="tblwrap">
+    <table>
+      <thead><tr><th style="width:22%">字段</th><th style="width:16%">取值</th><th style="width:62%">说明</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">factor_scores</td><td>dict</td><td>四个模块的原始得分</td></tr>
+        <tr><td class="mono">contributions</td><td>dict</td><td>各因子按权重后的贡献值</td></tr>
+        <tr><td class="mono">composite</td><td>float</td><td>四维加权综合分</td></tr>
+        <tr><td class="mono">percentile</td><td>float</td><td>分位 = <b>有多少同业低于你</b> ÷ 样本数</td></tr>
+        <tr><td class="mono">layer</td><td>Q1–Q5</td><td>Q1 前 20% · Q2 20–40% · Q3 40–60% · Q4 60–80% · Q5 后 20%</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p style="font-size:12.5px;color:var(--ink3);margin:6px 0 0">
+    未提供同业样本时，以绝对分近似分位，并须显式标注为近似。</p>
+  </div>
+</section>
+
+<section>
+  <h2>三、信号类型 → 操作建议 的对应关系<span class="tag">核心</span></h2>
+  <p class="lead">三类信号可能互相矛盾。因此必须先定<b>优先级</b>，再谈映射 —— 否则"多因子好但趋势空头"这类情形无法裁决。</p>
+
+  <h3>3.1 优先级（决定权从高到低）</h3>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:6%">序</th><th style="width:24%">决定者</th><th style="width:70%">为什么在这个位置</th></tr></thead>
+    <tbody>
+      <tr><td><b>①</b></td><td><b>逻辑止损</b>（基本面证伪）</td><td>它回答"我为什么买它还成立吗"，是<b>原因层</b>；其余信号都在回答"现在该做什么"，是<b>动作层</b>。原因不成立时，动作层无意义</td></tr>
+      <tr><td><b>②</b></td><td><b>量化信号</b> BLOCK / EXIT</td><td>确定性的，不含主观判断，必须优先于需要解释的信号</td></tr>
+      <tr><td><b>③</b></td><td><b>监控信号</b> critical</td><td>暂缓一切加仓动作（但不强制平仓 —— 那是量化的职责）</td></tr>
+      <tr><td><b>④</b></td><td><b>多因子分层</b></td><td>它衡量的是<b>相对</b>位置。一家排前 10% 的公司也可能处在下跌趋势中 —— <b>相对好 ≠ 现在该买</b></td></tr>
+      <tr><td><b>⑤</b></td><td><b>量化信号</b> ENTRY + 监控降级</td><td>触发建仓，但监控 warning 会使仓位减半</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>3.2 空仓时的映射矩阵</h3>
+  <div class="tblwrap">
+  <table>
+    <thead>
+      <tr>
+        <th style="width:16%">量化信号</th><th style="width:14%">因子分层</th><th style="width:16%">监控级别</th>
+        <th style="width:20%">操作建议</th><th style="width:14%">建议仓位</th><th style="width:20%">决定者</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><code>block</code></td><td>任意</td><td>任意</td><td><span class="pill bad">不入场</span></td><td>0</td><td>量化（优先级 ②）</td></tr>
+      <tr><td><code>wait</code></td><td>任意</td><td>任意</td><td><span class="pill gray">观察</span></td><td>0</td><td>量化（优先级 ②）</td></tr>
+      <tr><td><code>entry</code></td><td>Q1–Q2</td><td>info</td><td><span class="pill ok">建仓</span></td><td>标准仓位</td><td>量化 + 因子（②④）</td></tr>
+      <tr><td><code>entry</code></td><td>Q1–Q2</td><td>warning</td><td><span class="pill mid">建仓（半仓）</span></td><td>标准仓位 ÷ 2</td><td>监控（优先级 ⑤ 降级）</td></tr>
+      <tr><td><code>entry</code></td><td>Q1–Q2</td><td>critical</td><td><span class="pill mid">暂缓建仓</span></td><td>0</td><td>监控（优先级 ③）</td></tr>
+      <tr><td><code>entry</code></td><td>Q3</td><td>info</td><td><span class="pill info">试仓</span></td><td>标准仓位 ÷ 4</td><td>量化 + 因子（②④）</td></tr>
+      <tr><td><code>entry</code></td><td>Q3</td><td>warning/critical</td><td><span class="pill mid">暂缓建仓</span></td><td>0</td><td>监控（③⑤）</td></tr>
+      <tr><td><code>entry</code></td><td><b>Q4–Q5</b></td><td>任意</td><td><span class="pill bad">不入场</span></td><td>0</td><td>多因子（优先级 ④）</td></tr>
+      <tr><td><b>任意</b></td><td>任意</td><td>任意</td><td><span class="pill bad">逻辑止损</span> 优先</td><td>降仓 / 清仓</td><td><b>逻辑止损（优先级 ①）</b></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>3.3 持仓时的映射矩阵</h3>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:26%">条件</th><th style="width:22%">操作建议</th><th style="width:18%">建议仓位</th><th style="width:34%">说明</th></tr></thead>
+    <tbody>
+      <tr><td>逻辑止损触发（≥2 条证伪）</td><td><span class="pill bad">清仓</span></td><td>0</td><td>优先级 ①，跳过其余判定</td></tr>
+      <tr><td>逻辑止损触发（1 条证伪）</td><td><span class="pill mid">降仓</span></td><td>50%</td><td>优先级 ①</td></tr>
+      <tr><td>量化 <code>exit</code></td><td><span class="pill bad">清仓</span></td><td>0</td><td>优先级 ②</td></tr>
+      <tr><td>量化 <code>block</code></td><td><span class="pill mid">降仓</span></td><td>33%</td><td>优先级 ②，减至观察仓</td></tr>
+      <tr><td>监控 critical</td><td><span class="pill info">持有（禁加仓）</span></td><td>维持</td><td>优先级 ③</td></tr>
+      <tr><td>因子跌至 Q4–Q5</td><td><span class="pill mid">降仓</span></td><td>67%</td><td>优先级 ④</td></tr>
+      <tr><td>其余</td><td><span class="pill ok">持有</span></td><td>维持</td><td>—</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="chartbox">
+    <div class="ct">仓位决策阶梯（空仓 · 量化 ENTRY 通过后）</div>
+    <div class="cs">柱高 = 建议仓位占标准仓位的比例。可以看出：<b>因子分层决定量级，监控级别再做降级</b>，两者是串联而非并联。</div>
+    <div id="chartPos" class="chart"></div>
+  </div>
+
+  <h3>3.4 判定链（可审计）</h3>
+  <p>每次给出建议时，引擎都会输出完整判定链。这是为了回答"这个建议是基于什么得出的"：</p>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:100%">示例输出（量化 ENTRY + 因子 Q1 + 监控 WARNING）</th></tr></thead>
+    <tbody>
+      <tr><td><pre style="margin:0;font-size:12px;line-height:1.7;font-family:ui-monospace,Menlo,monospace">操作建议: 建仓（半仓）   建议仓位 1.82%
+决定者: 监控信号（优先级 ⑤ 降级）
+否决/约束:
+  ✗ 监控 WARNING：存在需观察的事件
+判定链:
+  输入: quant=entry factor=Q1 monitor=warning holding=False
+  ① 逻辑止损：未触发
+  ② 量化 ENTRY —— 通过，进入仓位判定
+  ③ 监控：无 CRITICAL
+  ④ 因子 Q1（前 40%）—— 标准仓位
+  ⑤ 监控 WARNING —— 仓位减半</pre></td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2>四、复盘涵盖的内容维度<span class="tag">执行 / 未执行 双向</span></h2>
+  <p class="lead">复盘分两种情形，因为它们的<b>修正方向完全相反</b>：执行了但结果不好 → 可能计划错（调参数）；该执行时没执行 → 可能手软（调执行机制）。混在一起会得出"系统需要优化"这种无用结论。</p>
+
+  <h3>4.1 共同维度（两种情形都评）</h3>
+
+  <div class="dim d1">
+    <div class="dt">D1 · 信号一致性</div>
+    <div class="dd">实际动作 vs 三类信号给出的建议是否一致。<br>
+    <b>判据：</b>建议本就是"不动"时未操作 → 一致（100 分）；建议是建仓/清仓而未操作 → 不一致（0 分）。</div>
+  </div>
+
+  <div class="dim d2">
+    <div class="dt">D2 · 逻辑验证</div>
+    <div class="dd">买入假设是否被证伪。逐条标注 verified / unverified / falsified。<br>
+    <b>判据：</b>得分 = 已验证数 ÷ 假设总数。任一证伪即触发逻辑止损（优先级高于价格止损）。</div>
+  </div>
+
+  <div class="dim d3">
+    <div class="dt">D3 · 数据质量</div>
+    <div class="dd">本轮分析的数据缺口数。每项缺口扣 20 分。<br>
+    <b>判据：</b>缺口字段不得进入决策；缺口过多时结论不可信，须标注后重跑。</div>
+  </div>
+
+  <div class="dim d4">
+    <div class="dt">D4 · 事后验证</div>
+    <div class="dd">T+5 / T+20 回看，判断当时动作的对错。<br>
+    <b>判据：</b>执行后价格反向 = 偏错；未操作后价格上涨 = 错过。窗口未到时返回"待补跑"，不猜。</div>
+  </div>
+
+  <h3>4.2 情形 A：已执行 —— 额外维度</h3>
+
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:14%">维度</th><th style="width:30%">评什么</th><th style="width:56%">判据与修正动作</th></tr></thead>
+    <tbody>
+      <tr><td><b>A1</b> 执行偏差</td><td>计划价 vs 实际成交价、时间滞后</td><td>偏差 ≤1% 可接受；&gt;3% 过大。修正：复核下单方式（限价单 vs 市价单）</td></tr>
+      <tr><td><b>A2</b> 仓位合规</td><td>实际仓位 vs 建议仓位</td><td>实际/建议 &gt;110% 判超配（放大风险敞口）；&lt;90% 判低配（削弱信号有效性）</td></tr>
+      <tr><td><b>A3</b> 成本核算</td><td>实际成本 vs 假设成本</td><td>印花税已核验为 0.05% 卖出单边；佣金/过户费/滑点须从对账单回填 —— <b>否则参数寻优会偏向高频</b></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>4.3 情形 B：未操作 —— 额外维度</h3>
+  <div class="note"><b>B1 是本模块最关键的一个维度。</b>未操作必须归因，因为不归因就无法区分"计划错"与"手软"，而两者修正方向相反。</div>
+
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:14%">维度</th><th style="width:26%">归因 / 评什么</th><th style="width:12%">得分</th><th style="width:48%">修正方向</th></tr></thead>
+    <tbody>
+      <tr><td rowspan="4"><b>B1</b><br>未执行归因</td>
+        <td><code>signal_not_triggered</code><br>信号未触发</td><td>100</td>
+        <td><b>正常</b> —— 建议本就是不动，未操作是正确行为</td></tr>
+      <tr>
+        <td><code>triggered_not_acted</code><br>触发了没执行</td><td><b>0</b></td>
+        <td><b>权限问题</b> —— 修正方向是执行机制（考虑系统接管下单权限），不是参数。追问：若理由是长期逻辑，那这个理由在下一次触发时是否也成立？<b>永远成立的理由等于没有理由</b></td></tr>
+      <tr>
+        <td><code>condition_unmet</code><br>条件不满足</td><td>50</td>
+        <td><b>设计问题</b> —— 修正方向是执行条件（增加不可成交情形的最坏损失重算），<b>不是纪律</b>。跌停封板时系统同样卖不出去，接管没有意义</td></tr>
+      <tr>
+        <td><code>missed_monitoring</code><br>未跟踪</td><td>30</td>
+        <td><b>流程问题</b> —— 把标的加入财报日历与日频监控</td></tr>
+
+      <tr><td><b>B2</b> 信号有效性</td><td>事后验证：信号与人，谁对</td><td>0–80</td>
+        <td>信号正确而未执行 → 强化执行机制；信号偏保守而未执行反而更好 → 复核止损宽度与阈值。<br><b>特例：</b>条件不满足时<b>不评判对错</b>，只评判预案是否充分（仓位上限是否已计入不可成交情形）</td></tr>
+
+      <tr><td><b>B3</b> 纪律扣分</td><td>硬性动作未执行</td><td>0</td>
+        <td>硬性动作（如硬止损）未执行 → 直接归零 + 建议系统接管。<br><b>例外：</b>客观条件不允许时<b>不适用</b>（不构成纪律问题）</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>4.4 情绪维度（两种情形共用）</h3>
+  <div class="dim d4">
+    <div class="dt">E1 · 情绪标签</div>
+    <div class="dd">每次手动加减仓时打标签：平静 / 贪婪 / 恐惧 / 焦虑 / 不甘 / 从众。<br>
+    <b>判据：</b>仅"平静"视为一致。情绪主导操作占比 &gt;50% → 建议暂停交易。<br>
+    <b>为什么单列：</b>这是四维里唯一需要手工输入的维度之一，它决定了系统的自动化上限 —— 不要假装它可以自动算出来。</div>
+  </div>
+
+  <h3>4.5 三种未执行情形的归因对比</h3>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:24%">未执行原因</th><th style="width:30%">归因结论</th><th style="width:20%">系统接管</th><th style="width:26%">修正动作</th></tr></thead>
+    <tbody>
+      <tr><td>触发了没执行</td><td><b>【权限问题】</b>修正方向是执行机制，不是参数</td><td><span class="pill bad">是</span></td><td>系统接管下单权限</td></tr>
+      <tr><td>信号未触发</td><td><b>【正常】</b>未操作是正确行为</td><td><span class="pill ok">否</span></td><td>无</td></tr>
+      <tr><td>条件不满足</td><td><b>【设计问题】</b>修正方向是执行条件，不是纪律</td><td><span class="pill ok">否</span></td><td>用最坏损失重算降低仓位上限</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2>五、实现与验证状态</h2>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:30%">模块</th><th style="width:34%">文件</th><th style="width:36%">状态</th></tr></thead>
+    <tbody>
+      <tr><td>名称解析</td><td class="mono">analysis/resolver.py</td><td><span class="pill ok">已实现</span> 歧义识别 + 置信度门槛</td></tr>
+      <tr><td>四维分析模块</td><td class="mono">analysis/modules.py</td><td><span class="pill ok">已实现</span> 含两条壁垒硬约束</td></tr>
+      <tr><td>三类信号 + 映射引擎</td><td class="mono">analysis/engine.py</td><td><span class="pill ok">已实现</span> 含判定链审计</td></tr>
+      <tr><td>双向复盘</td><td class="mono">analysis/review.py</td><td><span class="pill ok">已实现</span> 含 4 类未执行归因</td></tr>
+      <tr><td>手动输入入口</td><td class="mono">scripts/analyze.py</td><td><span class="pill ok">已实现</span> 分析 / 复盘双模式</td></tr>
+      <tr><td>测试</td><td class="mono">tests/test_analysis.py</td><td><span class="pill ok">97 个测试全部通过</span></td></tr>
+      <tr><td>真实数据接入</td><td class="mono">data/akshare_adapter.py</td><td><span class="pill mid">待实现</span> 当前用 fixtures 与内置样本</td></tr>
+      <tr><td>美股侧验证</td><td>—</td><td><span class="pill bad">未验证</span> 只有设计，未用真实标的跑通</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>开发中发现并修复的两处设计矛盾</h3>
+  <div class="warn">
+    <b>① 壁垒模块：评分与发现自相矛盾。</b><br>
+    初版纯加权计分，科伦药业算出 <b>99/100 等级「宽」</b>，但同一份输出的发现里写着"ROIC 低于 WACC，技术优势未转化为资本回报，壁垒存疑"。原因是类型分 85 + 证据分 15 + 持续性 10 把 ROIC 的负分淹没了。<br>
+    <b>修正：</b>ROIC &lt; WACC 时设硬上限 45。修正后为 <b>45/100 等级「无」</b>，与发现一致。四维综合分从 81.7 降到 66.2。
+  </div>
+  <div class="warn">
+    <b>② 复盘模块：归因与修正动作矛盾。</b><br>
+    情形"跌停无法成交"下，归因判定为"设计问题、不是纪律问题"，但修正动作里仍建议"系统接管下单权限"。<b>系统在跌停时同样卖不出去，接管没有意义。</b><br>
+    <b>修正：</b>B2/B3 在 <code>condition_unmet</code> 情形下不再建议接管，改为"用最坏损失重算降低仓位上限"。
+  </div>
+  <div class="note"><b>这两处矛盾的共同点：</b>它们都不会报错，只会让结论失去可信度。这类问题只能靠<b>专门针对"一致性"的测试</b>发现，常规功能测试抓不到。</div>
+</section>
+
+<footer>
+  <div class="src">
+    实现位置：<code>qsys/src/qsys/analysis/</code>（resolver / modules / engine / review）+ <code>qsys/scripts/analyze.py</code><br>
+    验证方式：<code>PYTHONPATH=src python -m unittest discover -s tests</code> → 97 个测试通过；<code>PYTHONPATH=src python scripts/analyze.py 科伦药业</code> → 端到端跑通<br>
+    演示数据：002422 科伦药业，取自 2026-10-08 的真实取数结果（K 线、财务、估值分位、机构预测）。生产环境应替换为 <code>data/</code> 层的 adapter。<br>
+    本文档为系统规格说明，不构成投资建议。文中涉及的具体标的数字仅用于验证逻辑，不代表当前市场状态。
+  </div>
+  <div>
+    <b>免责声明：</b>以上内容基于公开数据和量化分析，仅供参考，不构成投资建议。市场有风险，投资需谨慎。任何投资决策应结合个人风险承受能力、资金状况和投资目标独立判断，必要时咨询持牌专业机构。过往表现不预示未来收益。
+  </div>
+</footer>
+
+</div>
+
+<script>
+echarts.init(document.getElementById('chartPos')).setOption({
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+  legend: { data: ['监控 INFO', '监控 WARNING', '监控 CRITICAL'], bottom: 0, itemWidth: 12, itemHeight: 8, textStyle: { fontSize: 11 } },
+  grid: { left: 56, right: 24, top: 24, bottom: 56 },
+  xAxis: { type: 'category', data: ['Q1–Q2 标准', 'Q3 试仓', 'Q4–Q5'], axisLabel: { fontSize: 11 } },
+  yAxis: { type: 'value', name: '仓位占标准仓位 %', max: 110, nameTextStyle: { fontSize: 10.5 }, axisLabel: { fontSize: 10.5 } },
+  series: [
+    { name: '监控 INFO', type: 'bar', barWidth: 20, itemStyle: { color: '#378ADD', borderRadius: [3, 3, 0, 0] }, data: [100, 25, 0] },
+    { name: '监控 WARNING', type: 'bar', barWidth: 20, itemStyle: { color: '#EF9F27', borderRadius: [3, 3, 0, 0] }, data: [50, 0, 0] },
+    { name: '监控 CRITICAL', type: 'bar', barWidth: 20, itemStyle: { color: '#E24B4A', borderRadius: [3, 3, 0, 0] }, data: [0, 0, 0] }
+  ]
+});
+</script>
+</body>
+</html>

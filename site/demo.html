@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>交互式分析演示 · cqs 量化投研系统</title>
+<style>
+  :root{
+    --ink:#16181d; --ink2:#4a4f5a; --ink3:#828a97;
+    --line:#e3e6ec; --line2:#f0f2f6;
+    --bg:#f6f7f9; --card:#ffffff;
+    --accent:#1f5fa8; --accent-bg:#eef4fb;
+    --ok:#1e6b3f; --ok-bg:#eaf5ee;
+    --warn:#a35b00; --warn-bg:#fdf5e6;
+    --bad:#a3272b; --bad-bg:#fdeeee;
+    --purple:#534AB7; --purple-bg:#efedfb;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:14px;line-height:1.7;-webkit-font-smoothing:antialiased;}
+  a{color:var(--accent);text-decoration:none;}
+  a:hover{text-decoration:underline;}
+
+  header.top{background:var(--card);border-bottom:1px solid var(--line);padding:14px 24px;
+    position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+  header.top h1{margin:0;font-size:16px;font-weight:600;}
+  header.top .tag{font-size:11.5px;color:var(--ink3);}
+  nav{margin-left:auto;display:flex;gap:14px;flex-wrap:wrap;font-size:13px;}
+
+  .layout{display:grid;grid-template-columns:400px 1fr;gap:20px;max-width:1500px;
+    margin:0 auto;padding:20px 24px 60px;align-items:start;}
+  @media(max-width:1100px){.layout{grid-template-columns:1fr;}}
+
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:18px 20px;margin-bottom:16px;}
+  .panel h2{margin:0 0 12px;font-size:14.5px;font-weight:600;display:flex;align-items:center;gap:8px;}
+  .panel h2 .idx{display:inline-flex;align-items:center;justify-content:center;
+    width:20px;height:20px;border-radius:5px;background:var(--accent-bg);color:var(--accent);
+    font-size:11.5px;font-weight:600;}
+
+  .presets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+  .presets button{border:1px solid var(--line);background:#fafbfc;border-radius:8px;
+    padding:7px 12px;font-size:12.5px;cursor:pointer;color:var(--ink2);font-family:inherit;}
+  .presets button:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg);}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+  label{display:block;font-size:12px;color:var(--ink3);margin-bottom:3px;}
+  input[type=text],input[type=number],select{width:100%;padding:7px 9px;border:1px solid var(--line);
+    border-radius:7px;font-size:13px;font-family:inherit;background:#fff;color:var(--ink);}
+  input:focus,select:focus{outline:none;border-color:var(--accent);}
+  .chk{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink2);margin:6px 0;}
+  .chk input{width:auto;}
+  .hint{font-size:11.5px;color:var(--ink3);margin-top:6px;line-height:1.5;}
+
+  .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px;}
+  .kpi{border:1px solid var(--line);border-radius:9px;padding:11px 12px;background:#fafbfc;}
+  .kpi .n{font-size:19px;font-weight:600;line-height:1.25;}
+  .kpi .l{font-size:11.5px;color:var(--ink3);}
+
+  .assess{border:1px solid var(--line);border-radius:10px;padding:13px 15px;margin-bottom:11px;background:#fff;}
+  .assess-head{display:flex;align-items:center;gap:9px;margin-bottom:7px;}
+  .assess-name{font-weight:600;font-size:13.5px;}
+  .assess-grade{font-size:11.5px;padding:1px 8px;border-radius:5px;font-weight:600;}
+  .assess-score{margin-left:auto;font-size:17px;font-weight:600;}
+  .assess-score small{font-size:11px;color:var(--ink3);font-weight:400;}
+  .bar{height:5px;background:var(--line2);border-radius:3px;overflow:hidden;margin-bottom:9px;}
+  .bar i{display:block;height:100%;border-radius:3px;}
+  .good{color:var(--ok);} .mid{color:var(--accent);} .warn{color:var(--warn);} .bad{color:var(--bad);}
+  .bar i.good{background:var(--ok);} .bar i.mid{background:var(--accent);}
+  .bar i.warn{background:var(--warn);} .bar i.bad{background:var(--bad);}
+  .g-good{background:var(--ok-bg);color:var(--ok);} .g-mid{background:var(--accent-bg);color:var(--accent);}
+  .g-warn{background:var(--warn-bg);color:var(--warn);} .g-bad{background:var(--bad-bg);color:var(--bad);}
+
+  .assess-block{font-size:12.5px;margin-top:7px;}
+  .assess-block b{font-size:11.5px;color:var(--ink3);font-weight:600;letter-spacing:.3px;}
+  .assess-block ul{margin:3px 0 0;padding-left:18px;}
+  .assess-block li{margin:2px 0;color:var(--ink2);}
+  .assess-block.gap li{color:var(--warn);}
+  .assess-block.caveat li{color:var(--bad);}
+
+  .note{background:var(--accent-bg);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;
+    padding:10px 14px;font-size:12.5px;color:#1c3d63;margin:10px 0;}
+
+  .sig-group{margin-bottom:14px;}
+  .sig-title{font-size:13px;font-weight:600;margin-bottom:7px;}
+  .sig-sub{font-size:11.5px;color:var(--ink3);font-weight:400;margin-left:6px;}
+  .sig-row{display:grid;grid-template-columns:90px 1fr 70px 1fr;gap:10px;align-items:center;
+    border:1px solid var(--line);border-left-width:3px;border-radius:8px;padding:8px 12px;
+    font-size:12.5px;margin-bottom:6px;background:#fafbfc;}
+  .sig-row.quant{border-left-color:var(--ok);grid-template-columns:90px 1fr;}
+  .sig-row.factor{border-left-color:var(--warn);grid-template-columns:90px 1fr;}
+  .sig-row .lv{font-weight:600;font-family:ui-monospace,Menlo,monospace;font-size:11.5px;}
+  .sig-row .tr{color:var(--ink);}
+  .sig-row .wd{color:var(--ink3);font-size:11.5px;}
+  .sig-row .im{color:var(--ink2);font-size:12px;}
+  .sig-row.lv-critical{border-left-color:var(--bad);background:#fefafa;}
+  .sig-row.lv-critical .lv{color:var(--bad);}
+  .sig-row.lv-warning{border-left-color:var(--warn);background:#fffdf7;}
+  .sig-row.lv-warning .lv{color:var(--warn);}
+  .sig-row.lv-info{border-left-color:var(--ink3);}
+  .sig-row.lv-info .lv{color:var(--ink3);}
+  .sig-detail{font-size:11.5px;color:var(--ink3);padding-left:12px;margin-bottom:8px;}
+  .empty{font-size:12.5px;color:var(--ink3);padding:6px 0;}
+
+  .advice-box{border:2px solid var(--accent);border-radius:11px;padding:16px 20px;
+    background:linear-gradient(180deg,#f7fafd,#fff);margin-bottom:12px;}
+  .advice-main{font-size:26px;font-weight:600;color:var(--accent);line-height:1.2;}
+  .advice-meta{font-size:12.5px;color:var(--ink2);margin-top:6px;}
+  .blocked{background:var(--bad-bg);border-radius:8px;padding:10px 14px;font-size:12.5px;
+    color:#6d1a1d;margin-bottom:12px;}
+  .blocked ul{margin:4px 0 0;padding-left:18px;}
+  .chain{font-size:12.5px;}
+  .chain ol{margin:5px 0 0;padding-left:22px;color:var(--ink2);}
+  .chain li{margin:3px 0;font-family:ui-monospace,Menlo,monospace;font-size:11.5px;}
+
+  .rev-attr{background:var(--accent-bg);border-radius:8px;padding:11px 15px;
+    font-size:13px;font-weight:600;color:#1c3d63;margin-bottom:12px;}
+  .rev-attr.bad{background:var(--bad-bg);color:#6d1a1d;}
+  .rev-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  .rev-table th{text-align:left;background:#fafbfc;color:var(--ink2);font-weight:600;
+    padding:7px 10px;border-bottom:1.5px solid var(--line);font-size:11.5px;}
+  .rev-table td{padding:7px 10px;border-bottom:1px solid var(--line2);vertical-align:top;}
+  .rev-table code{font-size:11px;color:var(--accent);background:var(--accent-bg);
+    padding:1px 5px;border-radius:4px;}
+  .dim-detail{font-size:11px;color:var(--ink3);margin-top:2px;}
+  .corr{background:var(--warn-bg);border-radius:8px;padding:10px 14px;font-size:12.5px;
+    color:#6b3d00;margin-top:12px;}
+  .corr ul{margin:4px 0 0;padding-left:18px;}
+
+  .disclaimer{max-width:1500px;margin:0 auto;padding:0 24px 40px;font-size:11.5px;
+    color:var(--ink3);line-height:1.7;}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1>交互式分析演示</h1>
+  <span class="tag">cqs · C 语言量化投研系统</span>
+  <nav>
+    <a href="index.html">首页</a>
+    <a href="framework.html">研报框架</a>
+    <a href="templates.html">指标字典</a>
+    <a href="plan.html">五步法</a>
+    <a href="review.html">方案复审</a>
+    <a href="data-fix.html">数据纠错</a>
+    <a href="stack.html">技术选型</a>
+  </nav>
+</header>
+
+<div class="layout">
+
+  <!-- ============ 左：输入 ============ -->
+  <div>
+    <div class="panel">
+      <h2><span class="idx">1</span>标的选择</h2>
+      <div class="presets">
+        <button data-preset="002422">科伦药业 002422</button>
+        <button data-preset="002487">大金重工 002487</button>
+      </div>
+      <div class="grid2">
+        <div><label>股票名称</label><input type="text" id="stockName" value="科伦药业"></div>
+        <div><label>代码</label><input type="text" id="symbol" value="002422"></div>
+      </div>
+      <div class="hint">代码决定板块，进而决定涨跌停幅度与最小申报单位。688/689 → 科创板；300/301 → 创业板；8/4/920 → 北交所。</div>
+    </div>
+
+    <div class="panel">
+      <h2><span class="idx">2</span>四维分析输入</h2>
+
+      <div style="font-size:12px;font-weight:600;color:var(--accent);margin:4px 0 8px;">研报分析</div>
+      <div class="grid3">
+        <div><label>一致目标价</label><input type="number" step="0.01" id="r_target"></div>
+        <div><label>覆盖机构数</label><input type="number" id="r_coverage"></div>
+        <div><label>买入占比 %</label><input type="number" id="r_buyPct"></div>
+      </div>
+      <div class="chk"><input type="checkbox" id="r_siteVisit"><label for="r_siteVisit" style="margin:0">有机构调研记录</label></div>
+
+      <div style="font-size:12px;font-weight:600;color:var(--accent);margin:14px 0 8px;">所属行业</div>
+      <div class="grid2">
+        <div><label>行业</label><input type="text" id="i_industry"></div>
+        <div><label>生命周期</label>
+          <select id="i_stage"><option>导入</option><option>成长</option><option>成熟</option><option>下行</option></select>
+        </div>
+        <div><label>公司位置</label>
+          <select id="i_position"><option>龙头</option><option>细分龙头</option><option>追赶者</option><option>边缘</option></select>
+        </div>
+        <div><label>竞争强度</label>
+          <select id="i_intensity"><option>low</option><option>medium</option><option>high</option></select>
+        </div>
+        <div><label>行业毛利趋势</label>
+          <select id="i_margin"><option>up</option><option>flat</option><option>down</option></select>
+        </div>
+        <div><label>行业中位增速 %</label><input type="number" step="0.1" id="i_growth"></div>
+      </div>
+      <div><label>相对行业强弱 %（60日）</label><input type="number" step="0.1" id="i_rel"></div>
+
+      <div style="font-size:12px;font-weight:600;color:var(--accent);margin:14px 0 8px;">现金流</div>
+      <div class="grid2">
+        <div><label>经营现金流</label><input type="number" step="0.01" id="c_ocf"></div>
+        <div><label>归母净利</label><input type="number" step="0.01" id="c_np"></div>
+        <div><label>资本开支</label><input type="number" step="0.01" id="c_capex"></div>
+        <div><label>有息负债</label><input type="number" step="0.01" id="c_debt"></div>
+      </div>
+
+      <div style="font-size:12px;font-weight:600;color:var(--accent);margin:14px 0 8px;">核心壁垒</div>
+      <div class="grid2">
+        <div><label>壁垒类型</label>
+          <select id="m_type">
+            <option>技术专利</option><option>规模成本</option><option>网络效应</option>
+            <option>牌照</option><option>品牌</option><option>客户粘性</option><option>无</option>
+          </select>
+        </div>
+        <div><label>持续性（年）</label><input type="number" id="m_dur"></div>
+        <div><label>ROIC %</label><input type="number" step="0.01" id="m_roic"></div>
+        <div><label>WACC %</label><input type="number" step="0.01" id="m_wacc"></div>
+        <div><label>替代方案数</label><input type="number" id="m_sub"></div>
+        <div><label>可验证证据数</label><input type="number" id="m_ev"></div>
+      </div>
+      <div style="margin-top:10px;"><label>壁垒来源（必须可命名，留空则等级强制为「无」）</label>
+        <input type="text" id="m_source"></div>
+      <div class="hint">试试把"壁垒来源"清空 —— 无论其他字段多好看，等级都会掉到「无」。</div>
+    </div>
+
+    <div class="panel">
+      <h2><span class="idx">3</span>风控与信号</h2>
+      <div class="grid3">
+        <div><label>总资金</label><input type="number" id="capital" value="1000000"></div>
+        <div><label>单笔风险 %</label><input type="number" step="0.1" id="riskPct" value="1"></div>
+        <div><label>连续跌停数</label><input type="number" id="consec" value="3"></div>
+      </div>
+      <div class="grid3" style="margin-top:8px;">
+        <div><label>现价</label><input type="number" step="0.01" id="currentPrice"></div>
+        <div><label>入场价</label><input type="number" step="0.01" id="entry"></div>
+        <div><label>止损价</label><input type="number" step="0.01" id="stop"></div>
+      </div>
+
+      <div style="margin-top:12px;"><label>量化信号</label>
+        <select id="quantAction">
+          <option value="entry">entry — 趋势与动量一致向上</option>
+          <option value="wait">wait — 动量未确认</option>
+          <option value="block">block — 趋势级全部空头</option>
+          <option value="exit">exit — 趋势破位</option>
+        </select>
+      </div>
+      <div style="margin-top:8px;"><label>逻辑证伪假设数</label>
+        <select id="logicFalsified">
+          <option value="0">0 条</option><option value="1">1 条</option><option value="2">2 条</option>
+        </select>
+      </div>
+      <div class="chk"><input type="checkbox" id="holding"><label for="holding" style="margin:0">当前持仓</label></div>
+
+      <div style="font-size:12px;font-weight:600;color:var(--accent);margin:12px 0 6px;">监控信号</div>
+      <div class="chk"><input type="checkbox" id="mon_logic" checked><label for="mon_logic" style="margin:0">买入假设被证伪（critical）</label></div>
+      <div class="chk"><input type="checkbox" id="mon_gap" checked><label for="mon_gap" style="margin:0">存在数据缺口（warning）</label></div>
+      <div class="chk"><input type="checkbox" id="mon_report"><label for="mon_report" style="margin:0">财报临近披露（warning）</label></div>
+      <div class="chk"><input type="checkbox" id="mon_calib" checked><label for="mon_calib" style="margin:0">拥挤度阈值待校准（info）</label></div>
+    </div>
+
+    <div class="panel">
+      <h2><span class="idx">4</span>复盘记录</h2>
+      <div><label>情形</label>
+        <select id="outcome">
+          <option value="not_executed">未操作</option>
+          <option value="executed">已执行</option>
+        </select>
+      </div>
+      <div style="margin-top:8px;"><label>未执行归因（未操作时必填）</label>
+        <select id="noExecReason">
+          <option value="signal_not_triggered">信号未触发（正常）</option>
+          <option value="triggered_not_acted">信号已触发但未执行（纪律问题）</option>
+          <option value="condition_unmet">执行条件不满足（跌停无法成交）</option>
+          <option value="missed_monitoring">未跟踪标的</option>
+        </select>
+      </div>
+      <div class="chk"><input type="checkbox" id="mandatory" checked><label for="mandatory" style="margin:0">该动作为硬性要求（如硬止损）</label></div>
+      <div class="grid2" style="margin-top:8px;">
+        <div><label>计划价</label><input type="number" step="0.01" id="plannedPrice" value="40.00"></div>
+        <div><label>实际成交价</label><input type="number" step="0.01" id="actualPrice" value="40.15"></div>
+        <div><label>计划数量</label><input type="number" id="plannedQty" value="10000"></div>
+        <div><label>实际数量</label><input type="number" id="actualQty" value="5000"></div>
+        <div><label>T+20 价格</label><input type="number" step="0.01" id="priceT20" value="38.60"></div>
+        <div><label>情绪记录数</label><input type="number" id="emotionTotal" value="3"></div>
+        <div><label>其中非平静数</label><input type="number" id="emotionBad" value="2"></div>
+      </div>
+      <div class="grid3" style="margin-top:8px;">
+        <div><label>假设一</label>
+          <select id="h1s"><option value="">—</option><option value="verified">已验证</option>
+            <option value="unverified">待验证</option><option value="falsified">已证伪</option></select></div>
+        <div><label>假设二</label>
+          <select id="h2s"><option value="">—</option><option value="verified">已验证</option>
+            <option value="unverified">待验证</option><option value="falsified">已证伪</option></select></div>
+        <div><label>假设三</label>
+          <select id="h3s"><option value="">—</option><option value="verified">已验证</option>
+            <option value="unverified">待验证</option><option value="falsified">已证伪</option></select></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 右：输出 ============ -->
+  <div>
+    <div class="panel">
+      <h2>四维综合</h2>
+      <div id="out-composite"></div>
+    </div>
+
+    <div class="panel">
+      <h2>四模块评估</h2>
+      <div id="out-assess"></div>
+    </div>
+
+    <div class="panel">
+      <h2>三类信号</h2>
+      <div id="out-signals"></div>
+    </div>
+
+    <div class="panel">
+      <h2>操作建议</h2>
+      <div id="out-advice"></div>
+    </div>
+
+    <div class="panel">
+      <h2>复盘</h2>
+      <div id="out-review"></div>
+    </div>
+  </div>
+</div>
+
+<div class="disclaimer">
+  <b>免责声明：</b>以上内容基于公开数据和量化分析，仅供参考，不构成投资建议。市场有风险，投资需谨慎。
+  任何投资决策应结合个人风险承受能力、资金状况和投资目标独立判断，必要时咨询持牌专业机构。过往表现不预示未来收益。<br><br>
+  本页是 <code>cqs/</code>（C 语言实现）的前端镜像，用于演示规则逻辑。演示数据内嵌，非实时行情。
+</div>
+
+<script src="demo.js"></script>
+</body>
+</html>

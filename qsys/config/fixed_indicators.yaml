@@ -1,0 +1,361 @@
+# ============================================================================
+# 固定指标配置 · 系统基线
+# ============================================================================
+# 版本: v1.0
+# 生成: 2026-10-08
+# 状态: DRAFT —— 填写第 1 类后改为 CONFIRMED
+#
+# 与 v0（待确认版）的差异:
+#   1. 新增制度约束组（涨跌停/T+1/停牌/最小单位）—— 本轮外部核验所得
+#   2. 修正 ST 涨跌幅：主板 ST 已由 5% 调整为 10%（2026-07-06 起）
+#   3. 新增交易成本组
+#   4. 拥挤度阈值明确标记为 PENDING_CALIBRATION
+#   5. 寻优目标由卡玛比率改为 Sortino
+#
+# 三类归属:
+#   [YOU]  必须由你提供 —— 个人约束，任何默认值都不具约束力
+#   [ME]   已由系统定义 —— 市场客观事实
+#   [BOTH] 我给建议你确认 —— 需校准的阈值
+# ============================================================================
+
+meta:
+  schema: "qsys.fixed-indicators/v1"
+  generated: "2026-10-08"
+  status: "DRAFT"
+  confirmed_by: null
+  review_cycle: "quarterly"
+  rules_verified_at: "2026-10-08"
+  # 制度类规则的核验日期。修改任何制度数值前必须重新核验并更新此字段。
+
+
+# ============================================================================
+# 第 0 类 · 制度约束 [ME]
+# ============================================================================
+# 全部经外部来源实时核验。禁止凭记忆修改。
+# ============================================================================
+
+market_rules:
+  cn:
+    price_limit:
+      main_board: 10.0        # 沪深主板 ±10%
+      star_board: 20.0        # 科创板 ±20%
+      gem_board: 20.0         # 创业板 ±20%
+      bse: 30.0               # 北交所 ±30%
+      st_on_main: 10.0
+      # ⚠ 重要变更：沪深主板 ST / *ST 涨跌幅限制已由 5% 调整为 10%，
+      #   自 2026-07-06 起施行，与主板普通股一致。
+      #   核验来源：搜狐(2026-07-02)、新浪财经(2026-07-05)、东方财富(2026-07-06)、
+      #             腾讯新闻(2026-07-06)、上海市地方金融监管局(2026-07-02) 五源一致。
+      #   科创板/创业板 ST 股仍适用其板块的 ±20%。
+      new_stock_first_day: null   # 上市首日不设涨跌幅限制（主板有临时停牌机制）
+      new_stock_first_5d: null    # 创业板/科创板/北交所新股前 5 个交易日无涨跌幅约束
+
+    min_order_quantity:
+      main_board: 100         # 100 股整数倍
+      gem_board: 100
+      star_board: 200         # 科创板 200 股起，以 1 股递增
+      bse: 100
+      star_increment: 1
+      gem_increment: 100
+
+    settlement: "T+1"         # 当日买入不可当日卖出
+    price_cage: true          # 科创板/创业板存在有效竞价范围（价格笼子）
+    after_hours_fixed_price: true
+    # 2026-07-06 起，盘后固定价格交易适用范围扩展至全部 A 股
+
+    suspension:
+      principle: "以不停牌为原则、停牌为例外；短期停牌为原则、长期停牌为例外"
+      basis:
+        - "证监会《上市公司股票停复牌规则》（2022 年第 7 号公告，2022-01-05 施行）"
+        - "上交所《上市公司自律监管指引第 4 号——停复牌》（2025-03 修订）"
+      count_suspended_days_in_monitor: false
+      # 必须为 false。否则「跌破止损线且 N 日未收回」会被停牌日错误满足。
+      first_day_after_resume_uses_normal_stop: false
+      # 必须为 false。复牌常伴跳空缺口，常规止损价已失去意义。
+      reevaluate_window_days: 5
+
+  us:
+    price_limit: null         # 无涨跌停，实行 LULD 波动性熔断
+    settlement: "T+0"
+    verification_status: "NOT_VERIFIED"
+    # ⚠ 美股侧零实测。在完成至少一个完整标的的验证前，
+    #   不应把「双市场通用」当作既成事实。
+
+
+# ============================================================================
+# 第 1 类 · 必须由你提供 [YOU]
+# ============================================================================
+
+personal_constraints:
+  total_capital:
+    value: null
+    unit: "CNY"
+    hint: "总资金规模；是否包含未来追加资金"
+    why: "决定最小可交易单位与合理持仓数"
+
+  max_loss_per_trade:
+    value: null
+    unit: "pct"
+    suggested_range: [0.5, 2.0]
+    why: "整个风控体系的锚点。仓位由它反推"
+
+  max_drawdown_circuit_breaker:
+    value: null
+    unit: "pct"
+    why: "纪律条款，触及则停止开新仓"
+
+  max_position_per_symbol:
+    value: null
+    unit: "pct"
+    previous_setting: "8%–12%"
+    hint: "请确认该设定是否仍适用"
+    why: "决定能否承受单只黑天鹅"
+
+  max_concurrent_positions:
+    value: null
+    unit: "count"
+    suggested_range: [5, 15]
+
+  holding_horizon:
+    value: null
+    enum: ["short", "medium", "long"]
+    why: "期限决定所有参数选择，是其他阈值的前提"
+
+  trading_permissions:
+    margin: null
+    short_selling: null
+    star_market: null
+    st_stocks: null
+
+  actual_trading_cost:
+    commission_rate:
+      value: null
+      unit: "pct"
+      hint: "双向。注意券商是否有单笔最低收费"
+    commission_min:
+      value: null
+      unit: "CNY"
+      hint: "小资金交易时它可能主导成本"
+    transfer_fee_rate:
+      value: null
+      unit: "pct"
+    slippage_assumption:
+      value: null
+      unit: "pct"
+      suggested_range: [0.05, 0.2]
+      hint: "建议保守取值，回测按悲观口径"
+    why: "券商费率因人而异，必须从对账单取。缺此项会使参数寻优系统性偏向高频"
+
+  max_consecutive_limit_down:
+    value: null
+    unit: "交易日"
+    hint: "你持仓标的的历史最大连续跌停天数"
+    why: |
+      这是制度修正版仓位公式的必要输入。不同标的极端情况差异极大，
+      无法由系统推定。缺此项时无法计算最坏损失。
+      参考：主板单日跌停 10%，连续 3 日即放大 2.26 倍。
+
+
+# ============================================================================
+# 第 2 类 · 已由系统定义 [ME]
+# ============================================================================
+
+market_facts:
+  fundamental:
+    revenue_growth:
+      formula: "(本期营收 - 上年同期营收) / 上年同期营收"
+      granularity: ["单季", "累计"]
+    deducted_net_profit_growth:
+      formula: "同上，使用扣除非经常性损益后归母净利润"
+      why: "防非经常性损益掩盖主营恶化。实证：科伦药业 2026H1 归母 +12.71% 而扣非 -29.03%"
+    divergence_ratio:
+      formula: "abs(归母增速 - 扣非增速)"
+      unit: "pct"
+    ocf_to_net_profit:
+      formula: "经营现金流净额 / 归母净利润"
+      threshold_min: 0.8
+    gross_margin_trend:
+      formula: "连续 N 期毛利率变化方向"
+      note: "单期值无意义，趋势才有意义"
+    roe_weighted:
+      formula: "加权平均净资产收益率"
+    debt_to_asset:
+      formula: "总负债 / 总资产"
+    goodwill_to_equity:
+      formula: "商誉 / 归母股东权益"
+
+  valuation:
+    pe_ttm_percentile:
+      formula: "当前 PE(TTM) 在近 10 年分布中的百分位"
+      why: "比绝对 PE 更能说明市场已定价到什么程度"
+
+  technical:
+    ma_periods: [5, 10, 20, 60, 250]
+    adjustment: "前复权"
+    atr_period: 20
+    volatility_percentile:
+      formula: "60 日收益率标准差年化，取其在近 250 个交易日的分位"
+      why: |
+        A 股波动率替代方案。理由已修正：原方案称「中国波指已停止发布」，
+        但该断言证据不足（CEIC 数据止于 2018-02-14，另有 2025-06 新指数消息，
+        新浪 2026-09-28 仍有行情页），已撤回。
+        本方法成立不依赖指数是否存在 —— 它回答「这只股票比它自己平时更波动吗」。
+
+  trading_cost:
+    stamp_duty:
+      value: 0.05
+      unit: "pct"
+      direction: "卖出单边"
+      verified: true
+      verification: "经 2025-11 与 2026-09 两批独立公开资料交叉确认"
+      note: "此项无需你提供"
+
+  data_freshness:
+    price: 1.0
+    quote: 1.0
+    technical: 1.0
+    capital_flow: 2.0
+    valuation: 7.0
+    fundamental: 200.0
+    market_rule: 180.0
+    # 单位：天。价位类字段当日有效 —— 这是修正「45.44 被当作当前价」的直接手段。
+
+
+# ============================================================================
+# 第 3 类 · 我给建议你确认 [BOTH]
+# ============================================================================
+
+thresholds:
+  - key: revenue_growth_min
+    value: 20.0
+    unit: "pct"
+    adjustable_range: [15, 30]
+    confirmed: null
+
+  - key: deducted_np_growth_min
+    value: 0.0
+    unit: "pct"
+    adjustable_range: null
+    confirmed: null
+    why: "建议设为固定约束而非可调参数 —— 它是否决项，不该被优化掉"
+
+  - key: divergence_alert
+    value: 15.0
+    unit: "pct"
+    adjustable_range: [10, 25]
+    confirmed: null
+
+  - key: gross_margin_trend_window
+    value: 3
+    unit: "期"
+    adjustable_range: [2, 4]
+    confirmed: null
+
+  - key: roe_min
+    value: 15.0
+    unit: "pct"
+    adjustable_range: [12, 20]
+    confirmed: null
+
+  - key: debt_to_asset_max
+    value: 60.0
+    unit: "pct"
+    adjustable_range: [50, 70]
+    confirmed: null
+    note: "金融/地产需按行业豁免"
+
+  - key: goodwill_to_equity_max
+    value: 10.0
+    unit: "pct"
+    adjustable_range: [5, 15]
+    confirmed: null
+
+  - key: stop_loss_atr_multiple
+    value: 2.0
+    unit: "x ATR20"
+    adjustable_range: [1.5, 3.0]
+    confirmed: null
+
+  - key: signal_decay_days
+    value: 3
+    unit: "交易日"
+    adjustable_range: [2, 5]
+    confirmed: null
+    why: "防止用旧信号做新决策"
+
+  - key: crowding_threshold
+    value: null
+    unit: "融资余额历史分位"
+    status: "PENDING_CALIBRATION"
+    confirmed: null
+    why: |
+      修正项：原值「>80% 分位」来自单一案例（科伦药业），属方法论错误，已撤回。
+      校准方法：对历史全样本按融资余额分位分 5 档，
+      检验各档后续 20 个交易日收益与最大回撤是否单调分化。
+      校准完成前，该项不得写入任何规则。
+
+  - key: optimization_objective
+    value: "Sortino"
+    constraint: "CVaR(5%)"
+    confirmed: null
+    why: |
+      修正项：原用卡玛比率作寻优目标，但最大回撤是路径依赖的极值统计量，
+      对样本起止点高度敏感，寻优会偏向「在回测期内恰好没遇到大回撤」的参数。
+      改用 Sortino（只惩罚下行波动）为主，CVaR(5%) 作约束。
+      卡玛比率保留为展示指标，不再作为优化目标。
+
+
+# ============================================================================
+# 参数白名单（防过拟合）
+# ============================================================================
+
+param_whitelist:
+  adjustable:
+    stop_loss_atr_multiple: [1.5, 3.0]
+    signal_decay_days: [2, 5]
+    gross_margin_trend_window: [2, 4]
+    volatility_percentile_window: [120, 250]
+
+  fixed:
+    max_loss_per_trade_pct: "单笔最大损失 —— 由回撤预算决定，不可优化"
+    deducted_np_growth_min: "扣非增速门槛 —— 否决项，不可优化"
+    max_drawdown_circuit_breaker: "回撤熔断线 —— 纪律条款，不可优化"
+
+  rationale: |
+    可调参数用来适应市场，固定约束用来约束你自己。
+    如果连「单笔最多亏多少」都能在回测里优化，
+    那优化出来的结果一定是最激进的那个。
+
+
+# ============================================================================
+# 执行顺序
+# ============================================================================
+
+execution_order:
+  P0:
+    blocking: true
+    items:
+      - "[YOU] 确认 2026-08-24 与 2026-09-29 两次动作是否执行"
+      - "[YOU] 填写第 1 类全部个人约束（含 max_consecutive_limit_down）"
+    why: "纯输入，不需加工；缺了它们后续全是空转"
+  P1:
+    items:
+      - "补「选股筛选研报」最简版（门槛 + 否决原因）"
+      - "建立排除日志（用相对基准的超额收益）"
+    why: "筛选是唯一带否决权的环节，其错误会被复制到池内每一只标的"
+  P2:
+    items:
+      - "校准拥挤度阈值（分档回测）"
+      - "接入实际交易成本并验证费用结构完整性"
+      - "在回测引擎中建模 T+1 与涨跌停不可成交"
+    why: "在它们完成前跑出的任何参数结论都不可信"
+  P3:
+    items:
+      - "11 指标压缩为三级信号 + 三态定义"
+      - "接入真实数据源（akshare adapter）替换演示数据"
+    why: "规则改造，依赖 P0 的个人约束与 P2 的制度建模"
+  P4:
+    items:
+      - "用 NVDA 跑一遍完整五步，验证美股侧"
+      - "参数寻优（Sortino 目标）"
+    why: "规则未定、成本未建模时做寻优，等于在流沙上盖楼"

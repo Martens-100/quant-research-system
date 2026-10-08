@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A股/美股量化投研系统 · 项目总览</title>
+<style>
+  :root{
+    --ink:#16181d; --ink2:#4a4f5a; --ink3:#828a97;
+    --line:#e3e6ec; --line2:#f0f2f6;
+    --bg:#f6f7f9; --card:#ffffff;
+    --accent:#1f5fa8; --accent-bg:#eef4fb;
+    --ok:#1e6b3f; --ok-bg:#eaf5ee;
+    --warn:#a35b00; --warn-bg:#fdf5e6;
+    --purple:#534AB7; --purple-bg:#efedfb;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:14px;line-height:1.72;-webkit-font-smoothing:antialiased;}
+  a{color:var(--accent);text-decoration:none;}
+  .wrap{max-width:1100px;margin:0 auto;padding:40px 24px 72px;}
+  header{background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:34px 36px;margin-bottom:22px;}
+  header h1{margin:0 0 10px;font-size:26px;font-weight:600;letter-spacing:-.3px;}
+  header .sub{color:var(--ink2);font-size:14px;margin-bottom:18px;}
+  header .meta{color:var(--ink3);font-size:12.5px;border-top:1px solid var(--line2);padding-top:14px;}
+  .cta{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:#fff;
+    padding:11px 22px;border-radius:9px;font-size:14px;font-weight:600;margin-top:16px;}
+  .cta:hover{background:#1a4f8f;text-decoration:none;}
+  .cta.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent);margin-left:10px;}
+
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px;}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;}
+  .kpi .n{font-size:23px;font-weight:600;line-height:1.25;color:var(--accent);}
+  .kpi .l{font-size:12.5px;color:var(--ink3);margin-top:2px;}
+
+  section{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:26px 30px;margin-bottom:20px;}
+  h2{font-size:17px;font-weight:600;margin:0 0 6px;letter-spacing:-.1px;}
+  h2 .tag{font-size:11.5px;font-weight:500;color:var(--accent);background:var(--accent-bg);
+    border-radius:5px;padding:2px 7px;margin-left:8px;vertical-align:2px;}
+  p{margin:8px 0;color:var(--ink2);}
+  .lead{font-size:13.5px;margin-bottom:14px;}
+
+  .cards{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:16px;}
+  .card{border:1px solid var(--line);border-radius:12px;padding:18px 20px;background:#fafbfc;
+    display:block;transition:border-color .15s,background .15s;}
+  .card:hover{border-color:var(--accent);background:var(--accent-bg);text-decoration:none;}
+  .card .ct{font-size:14.5px;font-weight:600;color:var(--ink);margin-bottom:5px;}
+  .card .cd{font-size:12.5px;color:var(--ink2);line-height:1.6;}
+  .card .badge{display:inline-block;font-size:11px;padding:1px 7px;border-radius:5px;
+    background:var(--accent-bg);color:var(--accent);margin-left:8px;font-weight:500;}
+  .card.hl{border-color:var(--accent);border-width:2px;background:#f7fafd;}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0;}
+  th{background:#fafbfc;color:var(--ink2);font-weight:600;text-align:left;
+    padding:9px 11px;border-bottom:1.5px solid var(--line);font-size:12.5px;}
+  td{padding:9px 11px;border-bottom:1px solid var(--line2);vertical-align:top;}
+  tr:last-child td{border-bottom:none;}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;
+    background:var(--line2);padding:1px 5px;border-radius:4px;color:var(--ink);}
+  pre{background:#1c1f26;color:#e6e8ec;border-radius:10px;padding:16px 18px;overflow-x:auto;
+    font-size:12px;line-height:1.65;font-family:ui-monospace,Menlo,monospace;margin:12px 0;}
+  pre .c{color:#828a97;}
+  pre .g{color:#97C459;}
+  .note{background:var(--accent-bg);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;
+    padding:12px 16px;font-size:13px;color:#1c3d63;margin:14px 0;}
+  .warn{background:var(--warn-bg);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;
+    padding:12px 16px;font-size:13px;color:#6b3d00;margin:14px 0;}
+  .note b,.warn b{font-weight:600;}
+  footer{padding:20px 30px;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;font-size:12px;color:var(--ink3);line-height:1.75;}
+  @media(max-width:820px){
+    .kpis{grid-template-columns:repeat(2,1fr);}
+    .cards{grid-template-columns:1fr;}
+    .wrap{padding:20px 14px 40px;}
+    section{padding:20px 18px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>A股 / 美股 量化投研系统</h1>
+  <div class="sub">手动输入 · 四维分析 · 三类信号 · 操作建议 · 双向复盘</div>
+  <div class="meta">
+    实现语言 C17 &nbsp;·&nbsp; 零第三方依赖 &nbsp;·&nbsp; 123 项测试全部通过 &nbsp;·&nbsp;
+    四道审查闸门（编译期 / 静态分析 / 单元 / 集成）&nbsp;·&nbsp; 生成日期 2026-10-08
+  </div>
+  <a class="cta" href="demo.html">开始体验交互式分析 →</a>
+  <a class="cta ghost" href="framework.html">查看研报框架</a>
+</header>
+
+<div class="kpis">
+  <div class="kpi"><div class="n">8</div><div class="l">功能模块（按职责分组）</div></div>
+  <div class="kpi"><div class="n">123</div><div class="l">测试用例 · 全部通过</div></div>
+  <div class="kpi"><div class="n">0</div><div class="l">第三方依赖</div></div>
+  <div class="kpi"><div class="n">2.26×</div><div class="l">连续跌停最坏损失放大</div></div>
+</div>
+
+<section>
+  <h2>这个系统解决什么问题<span class="tag">设计取向</span></h2>
+  <p class="lead">它不是又一个选股工具。它的核心取向是 <b>先约束自己，再分析市场</b> —— 把规则写成可执行的代码，从而暴露规则本身的矛盾。</p>
+  <table>
+    <thead><tr><th style="width:26%">问题</th><th style="width:38%">表现</th><th style="width:36%">本系统的应对</th></tr></thead>
+    <tbody>
+      <tr><td>规则含混</td><td>"跌破 40 元且 3 日未收回" —— 谁数这 3 天？停牌日算不算？</td><td>决策树穷举分支，未覆盖的组合显式报错</td></tr>
+      <tr><td>数据脱钩</td><td>"45.44 元"被当作当前价，实际是两个月前的收盘价</td><td><code>field_value_t</code> 强制携带取数时刻与交易状态</td></tr>
+      <tr><td>制度缺位</td><td>风险预算公式假设止损必然成交，但连续跌停时卖不出去</td><td><code>rules</code> 模块重算最坏损失，反推仓位</td></tr>
+      <tr><td>信号打架</td><td>多因子好但趋势空头，听谁的？</td><td>五级优先级 + 可审计判定链</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>文档与工具<span class="tag">点击进入</span></h2>
+  <div class="cards">
+    <a class="card hl" href="demo.html">
+      <div class="ct">交互式分析演示<span class="badge">推荐</span></div>
+      <div class="cd">输入股票参数，实时看到四维评分、三类信号、操作建议与判定链。把"壁垒来源"清空试试，看等级怎么掉。</div>
+    </a>
+    <a class="card" href="framework.html">
+      <div class="ct">标准研报框架 v1.0</div>
+      <div class="cd">以实际研报为基准提取的 12 章结构、五级层级、三类内容（个股研报/数据分析/监管监控信号）的章节取舍矩阵。</div>
+    </a>
+    <a class="card" href="templates.html">
+      <div class="ct">选股研报模板库与指标字典</div>
+      <div class="cd">三份模板 × 三层指标 × A股/美股 8 处硬差异。含真实标的取数验证。</div>
+    </a>
+    <a class="card" href="plan.html">
+      <div class="ct">五步法逐条推进方案</div>
+      <div class="cd">每步给出深入提问、落地方案、开源支撑、缺口与行动建议。含三维完备度评估。</div>
+    </a>
+    <a class="card" href="review.html">
+      <div class="ct">方案复审与固定指标</div>
+      <div class="cd">对自身方案的 17 项复审发现（4 错误 / 5 遗漏 / 4 不一致 / 4 论证弱），以及固定指标的三类归属划分。</div>
+    </a>
+    <a class="card" href="data-fix.html">
+      <div class="ct">科伦药业数据纠错报告</div>
+      <div class="cd">13 项逐条对账 + 5 项重大遗漏。含关键日 K 线路径与三条框架线。</div>
+    </a>
+    <a class="card" href="stack.html">
+      <div class="ct">开源技术选型报告</div>
+      <div class="cd">19 个项目经 GitHub API 实时取数评估，含协议警示与淘汰证据。</div>
+    </a>
+  </div>
+</section>
+
+<section>
+  <h2>工程结构<span class="tag">按职责分组，依赖单向</span></h2>
+  <pre><span class="c"># 分组原则：一个模块 = 一个职责 = 一对 .h/.c</span>
+<span class="c"># 依赖方向严格单向，禁止回指</span>
+
+cqs/
+├── include/cqs/          <span class="c">公开接口（头文件只放声明，数据在 .c）</span>
+│   ├── core.h            <span class="c">领域模型 · Score 钳位 · X-macro 枚举生成器</span>
+│   ├── rules.h           <span class="c">制度约束 · 板块表 · 最坏损失重算</span>
+│   ├── data.h            <span class="c">数据源插拔（函数指针表）· 缺口日志</span>
+│   ├── signal.h          <span class="c">三层指标 · 三级信号 · 六分支决策树</span>
+│   ├── risk.h            <span class="c">止损 · 仓位 · 回撤预算</span>
+│   └── analysis.h        <span class="c">四模块评估 · 建议映射引擎</span>
+├── src/                  <span class="c">实现</span>
+│   ├── core.c  rules.c  data.c  signal.c  risk.c  analysis.c
+│   └── main.c            <span class="c">CLI 入口</span>
+├── tests/test_all.c      <span class="g">123 项断言</span>
+└── Makefile              <span class="c">make check = 四道闸门一次跑完</span></pre>
+
+  <h3 style="font-size:14.5px;margin:22px 0 8px;">代码嵌合的三处落地</h3>
+  <table>
+    <thead><tr><th style="width:22%">手法</th><th style="width:40%">解决什么</th><th style="width:38%">效果</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>X-macro 表驱动</b></td>
+        <td>枚举与字符串/数值表必须一致，手写必然漂移</td>
+        <td>一张表定义一次，同时展开为 enum + 名称表 + 数据表；<code>_Static_assert</code> 校验长度</td>
+      </tr>
+      <tr>
+        <td><b>一份逻辑 + 两份数据</b></td>
+        <td>A股/美股制度差异会导致复制两份实现，各自演化</td>
+        <td>CN/US 共用全部算法，差异收敛到 <code>market_profile_t</code> 数据剖面</td>
+      </tr>
+      <tr>
+        <td><b>统一评估结构</b></td>
+        <td>四个分析模块各写一套返回结构，信号层要写四套适配</td>
+        <td>四个模块返回同一个 <code>assessment_t</code>，信号与建议层只处理一种结构</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>同步审查流程<span class="tag">四道闸门</span></h2>
+  <p class="lead">每个模块写完立即跑闸门，通过才进下一个。<code>make check</code> 一次跑完全部四道。</p>
+  <table>
+    <thead><tr><th style="width:12%">闸门</th><th style="width:24%">检查什么</th><th style="width:64%">开发中实际拦到的问题</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>G0</b> 编译期</td>
+        <td><code>-Wall -Wextra -Werror -Wpedantic -Wshadow -Wconversion</code> + <code>_Static_assert</code></td>
+        <td>① <code>const char *const *</code> 与 <code>const char **</code> 不兼容<br>
+            ② 未使用的静态函数 <code>put()</code><br>
+            ③ 未使用的变量<br>
+            ④ 枚举计数名写错（<code>ACT_COUNT</code> vs <code>action_COUNT</code>）</td>
+      </tr>
+      <tr><td><b>G1</b> 静态分析</td><td><code>clang --analyze</code> 数据流与空指针</td><td>—</td></tr>
+      <tr>
+        <td><b>G2</b> 单元测试</td>
+        <td>制度数值、时效纪律、决策分支、硬约束</td>
+        <td>① 缺口判定写死阈值导致检查项少的模块带分通过<br>
+            ② 0 连跌停时最坏损失算成 0</td>
+      </tr>
+      <tr><td><b>G3</b> 集成测试</td><td>跨模块一致性</td><td>壁垒模块评分与发现自相矛盾（99 分「宽」vs 发现写「存疑」）</td></tr>
+    </tbody>
+  </table>
+
+  <div class="warn"><b>为什么闸门必须自动化：</b>上面这些问题<b>没有一个是"代码跑不起来"</b>。
+  它们全部能编译、能运行、能出结果 —— 只是结果悄悄是错的。
+  靠人眼看代码发现不了，靠运行也发现不了，只有类型系统和断言能。</div>
+</section>
+
+<section>
+  <h2>快速开始</h2>
+  <pre><span class="c"># 构建</span>
+make all
+
+<span class="c"># 跑完整审查（G0 编译期 + G1 静态分析 + G2 单元 + G3 集成）</span>
+make check
+
+<span class="c"># 运行演示</span>
+./build/cqs 002422</pre>
+
+  <div class="note"><b>零第三方依赖</b>是刻意设计：核心逻辑不依赖网络与外部库，
+  因此可以随时验证。真实取数由 <code>data</code> 模块的适配器负责 ——
+  换数据源只换一张函数指针表，调用方代码一行不改。</div>
+</section>
+
+<footer>
+  <b>免责声明：</b>本系统为方法论验证工具，不构成投资建议。所有规则参数需使用者自行确认，
+  系统输出的任何结论都不应作为交易依据。市场有风险，投资需谨慎。<br><br>
+  页面中的标的数字（科伦药业 002422、大金重工 002487）来自公开数据取数，仅用于演示规则逻辑，
+  其准确性与时效性以公司公告与原始披露为准。规则核验日期：2026-10-08。
+</footer>
+
+</div>
+</body>
+</html>

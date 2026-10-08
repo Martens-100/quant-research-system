@@ -1,0 +1,183 @@
+{
+  "schema": "workbuddy.stack-manifest/v1",
+  "generated": "2026-10-08",
+  "project": "A股/美股双市场量化投研系统",
+  "evidence_source": {
+    "api": "GitHub REST API v3",
+    "client": "gh CLI v2.68.1",
+    "account": "Martens-100",
+    "fetched_at": "2026-10-08T11:35+08:00",
+    "note": "所有字段为接口实时返回；未使用记忆值。Star 与提交活跃度会随时间变化，正式选型前需重新取数。"
+  },
+  "activity_metric": {
+    "name": "near_5w_commits",
+    "method": "GET /repos/{owner}/{repo}/stats/participation -> sum(.all[-5:])",
+    "rationale": "Star 是历史存量，提交量是当下活性。二者背离时以提交量为准。",
+    "caveat": "GitHub stats 接口存在缓存延迟，需与 /commits 真实记录交叉验证。"
+  },
+
+  "slots": [
+    {
+      "slot": "01-data-layer",
+      "repo": "akfamily/akshare",
+      "stars": 22851,
+      "license": "MIT",
+      "language": "Python",
+      "python_requires": ">=3.11",
+      "pushed_at": "2026-10-07T04:17:29Z",
+      "latest_release": "release-v1.19.1",
+      "latest_release_at": "2026-09-30",
+      "near_5w_commits": [0, 1, 2, 4, 0],
+      "open_issues": 2,
+      "deploy_artifacts": ["Dockerfile", "Dockerfile-Jupyter", "pyproject.toml", "uv.lock"],
+      "market_coverage_verified": {
+        "cn": ["stock_fundamental/", "stock_industry_sw.py", "stock_industry_em.py"],
+        "hk": ["stock_hk_famous.py"],
+        "us": ["stock_us_famous.py", "stock_us_js.py"],
+        "other": ["forex/", "fund/", "qhkc/"]
+      },
+      "deployability": "direct",
+      "use_for": [
+        "template.layer.fundamental",
+        "template.layer.technical",
+        "template.layer.capital_flow.cn"
+      ],
+      "second_development": [
+        "为 8 项 A 股资金面指标逐个建立 函数->字段 映射表（主力资金/北向/两融/龙虎榜/股东户数/大宗交易/板块合力/基金持股）",
+        "外层加带指数退避的重试与降级；失败字段标记 data_gap，禁止静默填 0",
+        "对每个依赖字段做量纲与量级断言（该库历史上出现过接口字段错位）"
+      ],
+      "risks": [
+        {"level": "medium", "risk": "巴士因子=1，提交几乎全部来自单一作者", "mitigation": "抽象 adapter 接口层，底层可替换（备选 baostock / electkismet/eltdx）"},
+        {"level": "medium", "risk": "本质为爬虫库，无 SLA，上游改版即失效", "mitigation": "取数流程必须能容忍字段级缺失"},
+        {"level": "low", "risk": "平台相关 JS 引擎依赖（mini-racer / py-mini-racer / akracer）可能需编译", "mitigation": "优先使用其 Dockerfile 部署"}
+      ]
+    },
+    {
+      "slot": "02-quant-core",
+      "repo": "microsoft/qlib",
+      "stars": 49210,
+      "license": "MIT",
+      "language": "Python",
+      "python_requires": ">=3.8",
+      "pushed_at": "2026-10-05T16:37:16Z",
+      "last_real_commit": "2026-09-16",
+      "latest_release": "v0.9.7",
+      "latest_release_at": "2025-08-15",
+      "near_5w_commits": [0, 2, 0, 0, 0],
+      "open_issues": 489,
+      "deploy_artifacts": ["Dockerfile", "Makefile", "build_docker_image.sh", "pyproject.toml", "setup.py"],
+      "market_coverage_verified": {
+        "us": ["scripts/data_collector/yahoo/", "scripts/data_collector/us_index/"],
+        "cn": ["scripts/data_collector/cn_index/", "scripts/data_collector/baostock_5min/"],
+        "other": ["crypto/", "fund/", "br_index/", "future_calendar_collector.py"]
+      },
+      "key_constraints": ["mlflow<3.13", "tianshou<=0.4.10", "numpy<2.0.0 (extras)", "scipy<=1.15.3"],
+      "deployability": "direct_with_data_adapter",
+      "use_for": [
+        "template.layer.fundamental.quant_validation",
+        "template.layer.technical.quant_validation",
+        "template.module.factor_ic_icir",
+        "template.module.walk_forward_backtest",
+        "template.module.portfolio_optimization"
+      ],
+      "second_development": [
+        "编写 akshare 输出 -> qlib bin 格式的转换管道（dump_bin.py / dump_pit.py）",
+        "财务数据强制按公告日入库以满足 Point-in-Time 一致性，否则回测产生前视偏差",
+        "建立 qlib 字段名与研报模板字段名的映射表"
+      ],
+      "risks": [
+        {"level": "medium-high", "risk": "低维护态：14 个月未发版 + 489 未关 issue，框架层 bug 需自救", "mitigation": "预留读源码与本地 patch 的时间；锁 Python 3.11"},
+        {"level": "medium", "risk": "依赖含上界锁（mlflow/tianshou/numpy），与其他库共存易冲突", "mitigation": "见 env_isolation 段"},
+        {"level": "medium", "risk": "配置驱动抽象层数多，学习曲线陡", "mitigation": "先用其官方示例 workflow 跑通再改"}
+      ]
+    },
+    {
+      "slot": "03-research-and-review",
+      "repo": "TauricResearch/TradingAgents",
+      "stars": 110163,
+      "license": "Apache-2.0",
+      "language": "Python",
+      "python_requires": ">=3.11",
+      "pushed_at": "2026-10-03T21:30:10Z",
+      "latest_release": "v0.6.0",
+      "latest_release_at": "2026-10-03",
+      "near_5w_commits": [12, 25, 65, 79, 23],
+      "open_issues": 93,
+      "deploy_artifacts": ["Dockerfile", "docker-compose.yml", ".dockerignore", "pyproject.toml", "requirements.txt"],
+      "default_data_source": ["yfinance>=1.7.0", "stockstats>=0.6.5", "FRED", "Polymarket", "SEC EDGAR"],
+      "builtin_capabilities_mapped": {
+        "html_report_output": "v0.6.0 reports saved as one HTML page -> 模板 A / 模板 B 输出形态",
+        "persistent_decision_log": "v0.2.4 persistent decision log + LangGraph checkpoint resume -> 模板 C C7 纪律复盘原料",
+        "backtesting": "v0.5.0 backtesting over ticker and date grid + portfolio-aware runs -> 框架第五步闭环",
+        "structured_output": "v0.2.4 structured-output agents (Research Manager / Trader / Portfolio Manager)",
+        "point_in_time": "v0.5.0 point-in-time integrity across every dated path",
+        "llm_providers": ["DeepSeek", "Qwen", "GLM", "Azure", "Bedrock", "Groq", "Mistral", "OpenAI-compatible"]
+      },
+      "deployability": "needs_second_development",
+      "use_for": [
+        "template.a.individual_deep_research",
+        "template.b.valuation_pricing",
+        "template.c.review_loop"
+      ],
+      "second_development": [
+        "数据源由 yfinance 替换为 A 股为主（akshare 实现其数据接口）",
+        "按三层指标体系重排 agent 分工；新增 A 股资金面层（龙虎榜/两融/北向），原生无此层",
+        "补齐复盘三层评分：纪律偏差归因、逻辑证伪判定、情绪标签（decision log 只给原料不给评分）",
+        "实测单标的 token 成本后再定自选股池的运行频率"
+      ],
+      "risks": [
+        {"level": "high", "risk": "多智能体辩论产出结构化论据而非概率；若当买卖信号用等于主观判断换更贵的包装", "mitigation": "定位为研报生成器与论据整理器，买卖决策仍由量化规则与风控阈值产生"},
+        {"level": "medium", "risk": "langchain/langgraph 生态破坏性变更频繁", "mitigation": "锁版本 + 容器化"},
+        {"level": "medium", "risk": "依赖 pandas>=3.0.6，与 qlib 的 numpy<2.0.0 冲突", "mitigation": "见 env_isolation 段"},
+        {"level": "low", "risk": "默认数据源与合规口径面向美股（SEC/FRED）", "mitigation": "A 股公告与财务口径需重新验证"}
+      ]
+    }
+  ],
+
+  "env_isolation": {
+    "policy": "按 SLOT 分环境，禁止三个项目装入同一 venv",
+    "conflict": {
+      "qlib": {"pandas": ">=1.1", "numpy": "<2.0.0 (extras)"},
+      "akshare": {"pandas": ">=2.0.0"},
+      "tradingagents": {"pandas": ">=3.0.6"},
+      "reason": "pandas 3.x 需要 numpy 2.x，与 qlib 的 numpy<2.0.0 直接冲突"
+    },
+    "environments": [
+      {"name": "env-quant", "members": ["akshare", "qlib"], "pin": {"python": "3.11", "numpy": ">=1.26,<2.0", "pandas": ">=2.0,<3"}},
+      {"name": "env-agent", "members": ["TradingAgents"], "pin": {"python": "3.11", "pandas": ">=3.0.6"}, "delivery": "docker-compose"},
+      {"name": "exchange", "method": "file (parquet/json) 或 local HTTP", "note": "环境间只交换数据，不共享解释器"}
+    ]
+  },
+
+  "rejected": [
+    {"repo": "twopirllc/pandas-ta", "reason": "HTTP 404，仓库已不存在", "replacement": "xgboosted/pandas-ta-classic (449 stars, MIT, 2026-10-02)"},
+    {"repo": "waditu/tushare", "stars": 15449, "license": "BSD-3-Clause", "last_commit": "2024-03-13", "open_issues": 771, "reason": "停更约 2 年 7 个月 + issue 积压 + 数据服务走积分制，在取数层引入外部计费点"},
+    {"repo": "mementum/backtrader", "stars": 23425, "license": "GPL-3.0", "last_commit": "2024-08-19", "reason": "GPL-3.0 传染性 + 已停止维护"},
+    {"repo": "quantopian/pyfolio", "stars": 6425, "license": "Apache-2.0", "last_commit": "2023-12-23", "reason": "停更近 3 年，功能已被 quantstats 覆盖"},
+    {"repo": "OpenBB-finance/OpenBB", "stars": 73953, "license": "NOASSERTION (Other)", "current_owner": "openbq-org/OpenBB", "near_5w_commits": [0, 0, 0, 1, 2], "reason": "协议无法用 SPDX 识别，商用授权边界不明 + 活性极低"},
+    {"repo": "nautechsystems/nautilus_trader", "stars": 29694, "license": "LGPL-3.0", "near_5w_commits": [148, 128, 124, 135, 134], "reason": "LGPL-3.0 分发义务 + 实盘交易引擎，与当前研究/回测需求错配"},
+    {"repo": "stefan-jansen/alphalens-reloaded", "stars": 665, "license": "Apache-2.0", "last_commit": "2025-12-15", "reason": "能力与 qlib 内置 IC/分层回测重叠，社区规模小"}
+  ],
+
+  "alternatives": [
+    {"repo": "simonlin1212/TradingAgents-astock", "stars": 3640, "license": "Apache-2.0", "near_5w_commits": [7, 4, 11, 1, 1], "note": "A 股适配版，含龙虎榜/游资/解禁；但作者近期提交为求职公告，维护连续性存疑，宜作参考实现"},
+    {"repo": "akfamily/akquant", "stars": 2397, "license": "MIT", "near_5w_commits": [9, 4, 20, 14, 0], "note": "qlib 的活跃替代，Rust+Python；版本仍在 0.3.x，API 未稳定"},
+    {"repo": "ranaroussi/quantstats", "stars": 7686, "license": "Apache-2.0", "note": "绩效分析 + HTML 报告，补 qlib 之外的组合绩效可视化"},
+    {"repo": "ranaroussi/yfinance", "stars": 25458, "license": "Apache-2.0", "note": "美股数据主力；美股侧建议直接用 yfinance，akshare 专注 A股/港股"},
+    {"repo": "fasiondog/hikyuu", "stars": 3554, "license": "Apache-2.0", "near_5w_commits": [41, 8, 141, 149, 51], "note": "C++/Python 高性能回测，活性极高；C++ 核心提高部署与调试门槛"},
+    {"repo": "xgboosted/pandas-ta-classic", "stars": 449, "license": "MIT", "note": "已消失的 pandas-ta 的社区继任者"}
+  ],
+
+  "license_whitelist": {
+    "allow": ["MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause"],
+    "review_required": ["LGPL-3.0", "GPL-3.0", "NOASSERTION", "MPL-2.0"],
+    "rule": "allow 名单可直接引入；review_required 需单独评估分发方式与合规义务"
+  },
+
+  "verification_status": {
+    "verified": ["仓库存在性", "Star 数", "协议 SPDX 标识", "pushed_at", "近5周提交量", "最新发版时间", "Python 版本约束", "依赖清单", "部署产物文件存在性", "目录结构（市场覆盖）"],
+    "not_verified": ["实际安装是否成功", "运行期行为", "A股资金面字段的实际可得性与限频表现", "LLM 调用成本"],
+    "next_step": "在隔离环境执行一次真实安装与冒烟测试，再据此确认部署结论"
+  }
+}

@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案复审与固定指标建议 · 执行前自查</title>
+<style>
+  :root{
+    --ink:#16181d; --ink2:#4a4f5a; --ink3:#828a97;
+    --line:#e3e6ec; --line2:#f0f2f6;
+    --bg:#f6f7f9; --card:#ffffff;
+    --up:#c0392b; --down:#1e8449;
+    --accent:#1f5fa8; --accent-bg:#eef4fb;
+    --warn:#a35b00; --warn-bg:#fdf5e6;
+    --bad:#a3272b; --bad-bg:#fdeeee;
+    --ok:#1e6b3f; --ok-bg:#eaf5ee;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:14px;line-height:1.72;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 24px 64px;}
+  header.top{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:28px 30px;margin-bottom:20px;}
+  header.top h1{margin:0 0 8px;font-size:23px;font-weight:600;letter-spacing:-.2px;}
+  header.top .sub{color:var(--ink2);font-size:13.5px;margin-bottom:14px;}
+  header.top .meta{color:var(--ink3);font-size:12.5px;border-top:1px solid var(--line2);padding-top:12px;}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px;}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;}
+  .kpi .n{font-size:22px;font-weight:600;line-height:1.3;}
+  .kpi .l{font-size:12.5px;color:var(--ink3);margin-top:2px;}
+  .kpi.e .n{color:var(--bad);} .kpi.o .n{color:var(--warn);}
+  .kpi.i .n{color:var(--accent);} .kpi.w .n{color:#534AB7;}
+  section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:26px 30px;margin-bottom:20px;}
+  h2{font-size:17px;font-weight:600;margin:0 0 6px;letter-spacing:-.1px;}
+  h2 .tag{font-size:11.5px;font-weight:500;color:var(--accent);background:var(--accent-bg);
+    border-radius:5px;padding:2px 7px;margin-left:8px;vertical-align:2px;}
+  h3{font-size:14.5px;font-weight:600;margin:22px 0 10px;}
+  h3:first-of-type{margin-top:14px;}
+  p{margin:8px 0;}
+  .lead{color:var(--ink2);font-size:13.5px;margin-bottom:14px;}
+  ul,ol{margin:8px 0;padding-left:22px;}
+  li{margin:5px 0;}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0;}
+  th{background:#fafbfc;color:var(--ink2);font-weight:600;text-align:left;
+    padding:9px 11px;border-bottom:1.5px solid var(--line);font-size:12.5px;white-space:nowrap;}
+  td{padding:9px 11px;border-bottom:1px solid var(--line2);vertical-align:top;}
+  tr:last-child td{border-bottom:none;}
+  td.mono,th.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;}
+  .v{font-weight:600;}
+  .pill{display:inline-block;font-size:11.5px;padding:1px 7px;border-radius:5px;line-height:1.6;white-space:nowrap;}
+  .pill.err{background:var(--bad-bg);color:var(--bad);}
+  .pill.omit{background:var(--warn-bg);color:var(--warn);}
+  .pill.incon{background:#efedfb;color:#534AB7;}
+  .pill.weak{background:#f1f0ea;color:#5F5E5A;}
+  .pill.you{background:#fdf0f0;color:#a3272b;}
+  .pill.me{background:var(--ok-bg);color:var(--ok);}
+  .pill.both{background:var(--accent-bg);color:var(--accent);}
+  .blk{border-left:3px solid var(--line);padding:2px 0 2px 16px;margin:16px 0;}
+  .blk.e{border-color:var(--bad);}
+  .blk.o{border-color:var(--warn);}
+  .blk.i{border-color:#534AB7;}
+  .blk.w{border-color:#828a97;}
+  .blk .bt{font-size:12px;font-weight:600;letter-spacing:.5px;margin-bottom:6px;}
+  .blk.e .bt{color:var(--bad);} .blk.o .bt{color:var(--warn);}
+  .blk.i .bt{color:#534AB7;} .blk.w .bt{color:#5F5E5A;}
+  .blk p,.blk ul,.blk ol{margin:6px 0;}
+  .blk .basis{font-size:12.5px;color:var(--ink3);margin-top:6px;}
+  .note{background:var(--accent-bg);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;
+    padding:12px 16px;font-size:13px;color:#1c3d63;margin:14px 0;}
+  .warn{background:var(--warn-bg);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;
+    padding:12px 16px;font-size:13px;color:#6b3d00;margin:14px 0;}
+  .bad{background:var(--bad-bg);border-left:3px solid var(--bad);border-radius:0 8px 8px 0;
+    padding:12px 16px;font-size:13px;color:#6d1a1d;margin:14px 0;}
+  .note b,.warn b,.bad b{font-weight:600;}
+  .grp{border:1px solid var(--line);border-radius:11px;padding:16px 18px;margin:14px 0;}
+  .grp.you{background:#fefafa;border-color:#f0d5d5;}
+  .grp.me{background:#f7fbf8;border-color:#d5e8da;}
+  .grp.both{background:#f7fafd;border-color:#d5e2f0;}
+  .grp .gt{font-weight:600;font-size:14px;margin-bottom:4px;}
+  .grp.you .gt{color:#a3272b;} .grp.me .gt{color:#1e6b3f;} .grp.both .gt{color:#1f5fa8;}
+  .grp .gd{font-size:12.5px;color:var(--ink2);margin-bottom:8px;}
+  footer{margin-top:8px;padding:20px 30px;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;font-size:12.5px;color:var(--ink2);line-height:1.75;}
+  footer .src{color:var(--ink3);font-size:12px;margin-bottom:10px;}
+  @media(max-width:860px){
+    .kpis{grid-template-columns:repeat(2,1fr);}
+    .wrap{padding:18px 14px 40px;}
+    section{padding:20px 18px;}
+    .tblwrap{overflow-x:auto;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <h1>方案复审与固定指标建议</h1>
+  <div class="sub">执行前自查：五步法方案中的错误、遗漏与不一致，以及股票池固定指标的归属划分与建议值</div>
+  <div class="meta">生成日期 2026-10-08 &nbsp;·&nbsp; 复审对象：五步法逐条推进方案（2026-10-08）&nbsp;·&nbsp; 新增外部核验：A 股交易费用结构、中国波指（iVIX）状态 &nbsp;·&nbsp; 复审原则：凡引用监管类数字必须实时核验，不采信记忆值</div>
+</header>
+
+<div class="kpis">
+  <div class="kpi e"><div class="n">4</div><div class="l">需修正的错误</div></div>
+  <div class="kpi o"><div class="n">5</div><div class="l">重大遗漏</div></div>
+  <div class="kpi i"><div class="n">4</div><div class="l">逻辑不一致</div></div>
+  <div class="kpi w"><div class="n">4</div><div class="l">论证强度不足</div></div>
+</div>
+
+<section>
+  <h2>一、复审结论</h2>
+  <p class="lead">我对自己上一轮方案做了逐条复核。<b>结论是：方案的主干成立，但有 4 处需要修正、5 处重大遗漏。</b>其中遗漏比错误更严重——错误会让你算错，遗漏会让你在不知道的地方系统性偏差。</p>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:5%">#</th><th style="width:10%">类型</th><th style="width:28%">问题</th><th style="width:31%">影响</th><th style="width:26%">修正</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>1</td><td><span class="pill err">错误</span></td>
+        <td>"中国波指已停止发布"——<b>断言过头</b></td>
+        <td>据此推出的"A 股无波动率指数可用"结论不成立</td>
+        <td>改为"状态需核实"，并列出来源冲突</td>
+      </tr>
+      <tr>
+        <td>2</td><td><span class="pill err">错误</span></td>
+        <td>"融资余额 &gt;80% 分位 = 拥挤"——<b>阈值来自单个样本</b></td>
+        <td>用一个案例的数值当通用阈值，属方法论错误</td>
+        <td>标记为待回测校准，不作为固定指标</td>
+      </tr>
+      <tr>
+        <td>3</td><td><span class="pill err">错误</span></td>
+        <td>卡玛比率作为参数寻优目标——<b>最大回撤是路径依赖的极值统计量</b></td>
+        <td>对样本期高度敏感，易过拟合到"恰好没大回撤"的参数</td>
+        <td>改用 Sortino 为主目标，卡玛作辅助参考</td>
+      </tr>
+      <tr>
+        <td>4</td><td><span class="pill err">错误</span></td>
+        <td>"三层"术语撞名——第二步的"三层"（趋势/动量/极值）与模板的"三层"（基本面/技术面/资金面）</td>
+        <td>后续沟通会持续歧义</td>
+        <td>第二步改称"三级信号"，模板侧保留"三层指标"</td>
+      </tr>
+      <tr>
+        <td>5</td><td><span class="pill omit">遗漏</span></td>
+        <td><b>交易成本完全缺失</b>（印花税 / 佣金 / 过户费 / 滑点）</td>
+        <td>不考虑成本的 Walk-Forward 会系统性偏向高频参数，回测收益虚高</td>
+        <td>新增"交易成本"固定指标组</td>
+      </tr>
+      <tr>
+        <td>6</td><td><span class="pill omit">遗漏</span></td>
+        <td><b>T+1 约束未落到回测</b></td>
+        <td>回测允许当日买卖，会高估收益</td>
+        <td>回测引擎增加 T+1 建模</td>
+      </tr>
+      <tr>
+        <td>7</td><td><span class="pill omit">遗漏</span></td>
+        <td><b>涨跌停对止损公式的破坏</b>：风险预算法假设止损可执行</td>
+        <td>连续跌停时实际损失远超止损宽度，公式失效</td>
+        <td>增加"跌停无法成交"的损失上限重算</td>
+      </tr>
+      <tr>
+        <td>8</td><td><span class="pill omit">遗漏</span></td>
+        <td><b>停牌处理未定义</b></td>
+        <td>A 股重大资产重组可停牌数月，回测与实盘均需处理</td>
+        <td>定义停牌期数据规则与持仓处理</td>
+      </tr>
+      <tr>
+        <td>9</td><td><span class="pill omit">遗漏</span></td>
+        <td><b>美股侧零实测验证</b>——A 股侧每个数字都实测，美股侧只有指标名称替换</td>
+        <td>"可迁移"目前是设计意图，不是已验证结论</td>
+        <td>显式声明验证不对称性</td>
+      </tr>
+      <tr>
+        <td>10</td><td><span class="pill incon">不一致</span></td>
+        <td>第四步"跌破前低 <b>或</b> 2×ATR"双条件：任一触发时实际生效的是更紧的那个</td>
+        <td>两条差很远时，另一条形同虚设</td>
+        <td>明确取"两者中较近者"并说明理由</td>
+      </tr>
+      <tr>
+        <td>11</td><td><span class="pill incon">不一致</span></td>
+        <td>第五步"结构破坏"与第二步"趋势层空头"可能给出不同判定</td>
+        <td>同一状态两套定义，触发条件不确定</td>
+        <td>统一"结构破坏"定义，引用同一处</td>
+      </tr>
+      <tr>
+        <td>12</td><td><span class="pill incon">不一致</span></td>
+        <td>参数白名单"可调 4 项"<b>未给范围约束</b></td>
+        <td>若 1–10 倍 ATR 都算可调，回测仍会过拟合到极端值</td>
+        <td>每项附可调区间</td>
+      </tr>
+      <tr>
+        <td>13</td><td><span class="pill incon">不一致</span></td>
+        <td>模板数量表述冲突：说"你选了三份"，实际跳过了"选股筛选研报"</td>
+        <td>补模板时基数不清</td>
+        <td>改为"已选 3 份 / 其中 1 份为缺口"</td>
+      </tr>
+      <tr>
+        <td>14</td><td><span class="pill weak">论证弱</span></td>
+        <td>雷达图评分未给评分标准</td>
+        <td>"动作可执行度 1–2 分"的结论缺少可复核依据</td>
+        <td>补评分锚点定义</td>
+      </tr>
+      <tr>
+        <td>15</td><td><span class="pill weak">论证弱</span></td>
+        <td>排除日志用"后来涨了"作判据，<b>缺对照基准</b></td>
+        <td>绝对涨幅会随大盘整体上涨而虚高，且有"不断放宽标准"的反向风险</td>
+        <td>改为与同期基准指数比较的相对收益</td>
+      </tr>
+      <tr>
+        <td>16</td><td><span class="pill weak">论证弱</span></td>
+        <td>"趋势层优先"会系统性导致右侧晚入场，未声明这个取舍</td>
+        <td>用户可能误以为这是免费的优势</td>
+        <td>显式声明：用收益换确定性</td>
+      </tr>
+      <tr>
+        <td>17</td><td><span class="pill weak">论证弱</span></td>
+        <td>缺跨步骤优先级排序</td>
+        <td>17 条行动建议并列，不知从何下手</td>
+        <td>补执行顺序（见第五节）</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2>二、四处错误的详细说明与判断依据</h2>
+
+  <div class="blk e">
+    <div class="bt">错误 1 · 中国波指的状态断言过头</div>
+    <p><b>我上轮的原话：</b>"VIX 是标普 500 的波动率指标，A 股没有直接对应物（中国波指已停止发布）。"</p>
+    <p><b>复核后发现的证据冲突：</b></p>
+    <ul>
+      <li>CEIC 数据库显示"上证 50ETF 波动率指数"观测值区间为 <b>2016-05-12 至 2018-02-14</b>，与"2018 年 2 月暂停发布"的说法吻合；</li>
+      <li>但另有一条 <b>2025-06</b> 的消息称，上交所"根据上证 50ETF 期权的交易价格情况，宣布发布中国首只基于真实期权交易数据编制的波动率指数"；</li>
+      <li>新浪财经在 <b>2026-09-28</b> 仍挂有"中国波指 (000188)"的行情页。</li>
+    </ul>
+    <p><b>判断依据：</b>同一事实有三个来源指向不同结论，且我无法确认 2025 年那个新指数与 000188 是否同一标的。按"数据源冲突时显式标注分歧、不静默选一个"的原则，<b>正确做法是标记为"需核实"，而不是断言"已停止发布"。</b></p>
+    <p><b>修正：</b>该点降级为待核实项。A 股波动率的替代方案（个股 60 日年化波动率分位）本身仍然成立——它回答的是"这只股票比它自己平时更波动吗"，与是否存在指数无关。所以<b>结论不变，但理由要换</b>。</p>
+  </div>
+
+  <div class="blk e">
+    <div class="bt">错误 2 · 拥挤度阈值来自单样本</div>
+    <p><b>我上轮的原话：</b>"融资余额分位 &gt;90% 分位且近 5 日方向转负 → 转入风控观察"，以及在第三步写"&gt;80% 分位 = 拥挤"。</p>
+    <p><b>问题：</b>这个 80% / 90% 是从<b>科伦药业一个案例</b>（8/19 融资余额超近一年 80% 分位）反推出来的。用一个样本的观测值当通用阈值，是典型的方法论错误——它既没有统计依据，也无法回答"为什么是 80 而不是 75 或 85"。</p>
+    <p><b>判断依据：</b>阈值只有两个合法来源——① 回测校准（在该阈值下分档，看后续收益/回撤是否单调分化）；② 全样本分布统计（全市场融资余额分位的分布形状）。单案例不构成任何一方。</p>
+    <p><b>修正：</b>把拥挤度阈值从"固定指标"降级为"待校准参数"，并明确校准方法：对历史全样本按融资余额分位分 5 档，检验各档后续 20 日收益与最大回撤是否单调。校准前不得写入规则。</p>
+  </div>
+
+  <div class="blk e">
+    <div class="bt">错误 3 · 卡玛比率不适合作唯一寻优目标</div>
+    <p><b>我上轮的原话：</b>"目标函数 = 卡玛比率（年化收益 ÷ 最大回撤）"。</p>
+    <p><b>问题：</b>最大回撤是一个<b>路径依赖的极值统计量</b>——它只记录样本期内最差的那一次。这意味着：① 对样本起止点高度敏感，换个起点结果就变；② 寻优会系统性地偏向"在回测期内恰好没遇到大回撤"的参数组合，而不是真正稳健的参数；③ 它不反映回撤的持续时间和恢复难度。</p>
+    <p><b>判断依据：</b>学术与业界对这类目标的通行修正，是用对分布更稳健的指标替代极值型指标。Sortino 比率（只惩罚下行波动）与 CVaR（条件在险价值，衡量尾部平均损失）都比最大回撤更适合做优化目标。</p>
+    <p><b>修正：</b>主目标改为 <b>Sortino 比率</b>，辅以 <b>CVaR(5%)</b> 作为约束条件（要求尾部平均损失不超过某阈值），卡玛比率保留为展示指标而非优化目标。</p>
+  </div>
+
+  <div class="blk e">
+    <div class="bt">错误 4 · "三层"术语撞名</div>
+    <p><b>问题：</b>你在模板设计环节选的"三层全要"，指的是<b>基本面 / 技术面 / 资金面</b>；而我在五步法第二步里写的"三层"，指的是<b>趋势层 / 动量层 / 极值层</b>。同一个词指了两个不同的东西，而且都出现在同一套方案里。</p>
+    <p><b>判断依据：</b>这不是措辞问题——如果后续代码里用 <code>layer</code> 做字段名，两套三层会直接冲突。</p>
+    <p><b>修正：</b>模板侧保留"三层指标"（基本面/技术面/资金面）；第二步改称"<b>三级信号</b>"（趋势/动量/极值）。代码里分别用 <code>indicator_layer</code> 与 <code>signal_tier</code>。</p>
+  </div>
+</section>
+
+<section>
+  <h2>三、五处重大遗漏</h2>
+  <p class="lead">这五处不是我写错了，而是<b>整块没写</b>。遗漏比错误更难发现，因为它不会报错。</p>
+
+  <div class="blk o">
+    <div class="bt">遗漏 1 · 交易成本（影响最大）</div>
+    <p>我整份方案里没有一个地方提到交易成本。后果是具体的：<b>Walk-Forward 参数寻优时，任何降低止损宽度的参数都会增加交易频率，而成本没被计入，于是回测会系统性地选出高频参数</b>，实盘一上就亏在成本上。</p>
+    <p><b>已核验的费用结构（部分）：</b>印花税 <b>0.05%、卖出单边</b>——这一条有多个独立来源一致确认（2025-11 与 2026-09 的公开资料均给出同一算法：卖出 10 万元对应印花税 50 元）。佣金与过户费<b>因人而异</b>，必须以你自己的券商对账单为准。</p>
+    <p><b>修正：</b>新增"交易成本"固定指标组，其中印花税为已核验的固定值，佣金/过户费/滑点为<b>需你提供的实值</b>。</p>
+  </div>
+
+  <div class="blk o">
+    <div class="bt">遗漏 2 · T+1 约束</div>
+    <p>我在选型报告里把"T+1 vs T+0"列为 A 股与美股的八处硬差异之一，但在五步法的回测方案里完全没有落实。后果：<b>回测允许当日买入当日卖出，会高估收益</b>——尤其对短线策略，高估幅度可能很大。</p>
+    <p><b>修正：</b>回测引擎必须显式建模：A 股当日买入的仓位在 T+1 日才可卖出；止损信号在 T 日触发时，若 T 日已买入则最早 T+1 执行。</p>
+  </div>
+
+  <div class="blk o">
+    <div class="bt">遗漏 3 · 涨跌停让止损公式失效</div>
+    <p>第四步的"风险预算法"核心公式是：<b>仓位 = 单笔风险预算 ÷ 止损宽度</b>。这个公式有一个隐藏假设——<b>止损一定能在设定价位成交</b>。</p>
+    <p>但在 A 股，若持仓股连续跌停，你根本卖不出去，实际损失会远超止损宽度。<b>公式在涨跌停制度下会失效，而且是朝坏的方向失效。</b></p>
+    <p><b>修正：</b>增加"不可成交情形"的损失重算：以历史最大连续跌停天数估算最坏情况下的实际损失，用它反推真正的仓位上限。这也意味着——<b>流动性差的标的需要比公式给出的仓位更低</b>。</p>
+  </div>
+
+  <div class="blk o">
+    <div class="bt">遗漏 4 · 停牌处理</div>
+    <p>A 股重大资产重组可停牌数月。停牌期间：价格无更新、指标无法计算、止损无法执行。我的方案对停牌零覆盖。</p>
+    <p><b>修正：</b>定义两条规则——① 停牌期间持仓锁定，监控清单暂停计时（否则"3 日未收回"会被停牌日错误地满足）；② 复牌后首个交易日不适用常规止损（跳空缺口会让止损价失去意义），改用"复牌后 N 日内重新评估"。</p>
+  </div>
+
+  <div class="blk o">
+    <div class="bt">遗漏 5 · 美股侧零实测</div>
+    <p><b>必须显式声明的事实：</b>整个方案里，A 股侧的每一个数字我都实测了（K 线、财务、估值分位、机构预测、资金面）；而<b>美股侧我只做了指标名称替换（13F、short interest、options flow），没有任何实测验证</b>。</p>
+    <p><b>判断依据：</b>这是一个结构性不对称。所以"可迁移至美股"目前是<b>设计意图</b>，不是已验证结论。在美股侧跑过至少一个完整标的之前，不应把"双市场通用"当作既成事实。</p>
+    <p><b>修正：</b>在方案里标注验证状态；把"用 NVDA 跑一遍完整五步"列为验证动作。</p>
+  </div>
+</section>
+
+<section>
+  <h2>四、固定指标建议方案<span class="tag">回答你的第二个问题</span></h2>
+  <p class="lead">先直接回答"由谁定义"这个问题：<b>必须分三类，不能一刀切。</b>原因是这三类指标的合法性来源不同——一类来自你的个人约束，一类来自市场客观事实，一类是需要校准的统计阈值。</p>
+
+  <div class="grp you">
+    <div class="gt">第 1 类 · 必须由你提供（我无法代定）</div>
+    <div class="gd">这些是<b>你的个人约束</b>，不是市场事实。我不知道你的资金规模、风险偏好和持有期限，任何我给的数值都只是模板里的默认值，不具备约束力。</div>
+    <div class="tblwrap">
+    <table>
+      <thead><tr><th style="width:26%">指标</th><th style="width:36%">需要你提供的信息</th><th style="width:38%">为什么必须由你定</th></tr></thead>
+      <tbody>
+        <tr><td><b>总资金规模</b></td><td>金额（元），以及是否包含未来追加</td><td>决定最小可交易单位与合理持仓数；小资金无法有效分散</td></tr>
+        <tr><td><b>单笔最大可承受损失</b></td><td>占总资金的百分比（建议区间 0.5%–2%）</td><td>这是整个风控体系的锚点。仓位由它反推，我不能替你决定你能承受多少亏损</td></tr>
+        <tr><td><b>总回撤熔断线</b></td><td>百分比（触及则停止开新仓）</td><td>是纪律条款，不是计算题。取决于你的心理与资金性质</td></tr>
+        <tr><td><b>单标的最大仓位上限</b></td><td>百分比</td><td>决定能否承受单只黑天鹅。你之前设 8%–12%，需要确认这个数是否仍适用</td></tr>
+        <tr><td><b>最大同时持仓数</b></td><td>整数（建议 5–15）</td><td>决定分散度与精力上限</td></tr>
+        <tr><td><b>持有期限</b></td><td>短线(&lt;20 日) / 中线(20–120 日) / 长线(&gt;120 日)</td><td>期限不同，适用的指标与参数完全不同——这是所有参数选择的前提</td></tr>
+        <tr><td><b>交易权限</b></td><td>是否可融资、是否可做空、是否可交易科创板/创业板（±20% 涨跌幅）</td><td>决定风控阈值与可选标的范围</td></tr>
+        <tr><td><b>实际交易成本</b></td><td>佣金费率（含单笔最低）、过户费、滑点假设</td><td><b>券商费率因人而异，必须以你的对账单为准</b>；印花税我已核验为卖出 0.05%，无需你提供</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="grp me">
+    <div class="gt">第 2 类 · 可由我定义（市场客观事实）</div>
+    <div class="gd">这些有公认口径，不因个人而变。我直接给出定义，你只需确认没有异议。</div>
+    <div class="tblwrap">
+    <table>
+      <thead><tr><th style="width:22%">指标</th><th style="width:40%">计算方式（精确口径）</th><th style="width:38%">理由</th></tr></thead>
+      <tbody>
+        <tr><td><b>营收增速</b></td><td>(本期营收 − 上年同期营收) ÷ 上年同期营收；单季与累计分别计算</td><td>成长池第一道门槛；单季与累计背离时需解释</td></tr>
+        <tr><td><b>扣非净利增速</b></td><td>同上，用扣除非经常性损益后归母净利</td><td>防非经常性损益掩盖主营恶化——科伦药业 2026H1 归母 +12.71% 但扣非 −29.03%，背离 41.7pct</td></tr>
+        <tr><td><b>归母/扣非背离度</b></td><td>|归母增速 − 扣非增速|，单位 pct</td><td>量化"利润质量"，比单看任一增速更能发现问题</td></tr>
+        <tr><td><b>经营现金流/归母净利</b></td><td>报告期经营现金流净额 ÷ 归母净利</td><td>利润含金量；&lt;0.8 说明利润未转化为现金</td></tr>
+        <tr><td><b>毛利率趋势</b></td><td>连续 3 期毛利率变化方向</td><td>定价权与产品结构；单期值无意义，趋势才有意义</td></tr>
+        <tr><td><b>ROE（加权）</b></td><td>加权平均净资产收益率</td><td>资本回报水平；注意与摊薄口径区分</td></tr>
+        <tr><td><b>资产负债率</b></td><td>总负债 ÷ 总资产（合并口径）</td><td>财务安全边际</td></tr>
+        <tr><td><b>商誉/净资产</b></td><td>商誉 ÷ 归母股东权益</td><td>并购减值风险排查</td></tr>
+        <tr><td><b>PE(TTM) 历史分位</b></td><td>当前 PE(TTM) 在近 10 年分布中的百分位</td><td>比绝对 PE 更能说明"市场已定价到什么程度"；科伦药业实测 94.2% 分位</td></tr>
+        <tr><td><b>个股年化波动率分位</b></td><td>60 日收益率标准差年化，取其在近 250 日的分位</td><td>A 股波动率替代方案；回答"这只股票比它自己平时更波动吗"</td></tr>
+        <tr><td><b>ATR20</b></td><td>20 日平均真实波幅</td><td>止损宽度的基准，替代固定整数止损</td></tr>
+        <tr><td><b>MA 周期组</b></td><td>5 / 10 / 20 / 60 / 250（前复权）</td><td>短中长三级趋势判断的标准周期</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="grp both">
+    <div class="gt">第 3 类 · 我给建议值，你确认（需校准的阈值）</div>
+    <div class="gd">这类是<b>判据阈值</b>——它们有理论依据但无唯一正确答案，且受你的持有期限影响。我给出建议值 + 可调区间 + 理由，你确认或修改。</div>
+    <div class="tblwrap">
+    <table>
+      <thead><tr><th style="width:20%">阈值</th><th style="width:16%">建议值</th><th style="width:18%">可调区间</th><th style="width:46%">理由</th></tr></thead>
+      <tbody>
+        <tr><td>营收增速门槛</td><td>&gt;20%</td><td>15%–30%</td><td>沿用你原有设定；上限不宜过高，否则池子过小</td></tr>
+        <tr><td>扣非净利增速门槛</td><td>&gt;0%</td><td>固定</td><td>建议设为固定约束而非可调参数——它是否决项，不该被优化掉</td></tr>
+        <tr><td>背离度预警</td><td>&gt;15pct</td><td>10–25pct</td><td>科伦药业实测 41.7pct 属极端；15pct 作为预警线较保守</td></tr>
+        <tr><td>毛利率趋势窗口</td><td>连续 3 期</td><td>2–4 期</td><td>3 期足以过滤单季波动，又不会反应过慢</td></tr>
+        <tr><td>ROE 门槛</td><td>&gt;15%</td><td>12%–20%</td><td>低于 12% 难以覆盖资金成本；高于 20% 会把多数行业排除</td></tr>
+        <tr><td>资产负债率上限</td><td>&lt;60%</td><td>50%–70%</td><td>行业差异大（金融/地产不适用），需按行业豁免</td></tr>
+        <tr><td>商誉/净资产上限</td><td>&lt;10%</td><td>5%–15%</td><td>超 10% 的减值风险显著上升</td></tr>
+        <tr><td>止损宽度</td><td>2 × ATR20</td><td>1.5–3 倍</td><td>2 倍是常见起点；倍数越小越易被噪声打掉，越大单笔损失越大</td></tr>
+        <tr><td>信号衰减窗口</td><td>3 个交易日</td><td>2–5 日</td><td>防止用旧信号做新决策；具体值需回测</td></tr>
+        <tr><td>拥挤度阈值</td><td><b>待校准</b></td><td>—</td><td><b>修正项：</b>原 &gt;80% 分位来自单样本，须先做分档回测校准，校准前不写入规则</td></tr>
+        <tr><td>参数寻优目标</td><td>Sortino 为主<br>CVaR(5%) 为约束</td><td>—</td><td><b>修正项：</b>原用卡玛比率，但最大回撤路径依赖、易过拟合</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="note"><b>一句话总结归属划分：</b>凡是"你能亏多少、你想持多久"——你定；凡是"这个指标怎么算"——我定；凡是"多少算超标"——我给建议你确认，其中拥挤度阈值必须先校准再定。</div>
+</section>
+
+<section>
+  <h2>五、修正后的执行顺序<span class="tag">补上原来缺的优先级</span></h2>
+  <p class="lead">上一轮我给了 17 条行动建议，但没排序。复审后我按"阻塞关系"重排——<b>有些事不做，后面的都做不了。</b></p>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:8%">批次</th><th style="width:26%">动作</th><th style="width:34%">为什么在这个位置</th><th style="width:32%">阻塞了什么</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>P0</b><br>现在</td>
+        <td><b>① 确认 8/24 与 9/29 两次动作是否执行<br>② 提供第 1 类固定指标（8 项个人约束）</b></td>
+        <td>这两件是<b>纯输入</b>，不需要我做任何加工，但缺了它们后面全是空转。① 决定纪律分与参数调整方向；② 决定所有风控阈值的量级</td>
+        <td>阻塞第四步参数、第六步纪律分、全部仓位计算</td>
+      </tr>
+      <tr>
+        <td><b>P1</b><br>紧接</td>
+        <td>③ 补"选股筛选研报"最简版（门槛 + 否决原因）<br>④ 建立排除日志（改用相对基准）</td>
+        <td>筛选是唯一带否决权的环节，且它的错误会被复制到池内每一只标的。排除日志需要时间累积，越早开始越好</td>
+        <td>阻塞第一步的双池划分与后续所有标的</td>
+      </tr>
+      <tr>
+        <td><b>P2</b><br>随后</td>
+        <td>⑤ 校准拥挤度阈值（分档回测）<br>⑥ 定义交易成本与 T+1 建模<br>⑦ 补涨跌停/停牌的损失重算规则</td>
+        <td>这三项都影响<b>回测结果的可信度</b>。在它们完成前跑出来的任何参数结论都不可信</td>
+        <td>阻塞第四步的参数寻优、第五步的阈值设定</td>
+      </tr>
+      <tr>
+        <td><b>P3</b><br>然后</td>
+        <td>⑧ 11 指标压缩为三级信号 + 三态定义<br>⑨ 第四步改为风险预算法<br>⑩ 第五步监控清单补阈值与动作</td>
+        <td>规则改造。依赖 P0 的个人约束与 P2 的成本/制度建模</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td><b>P4</b><br>最后</td>
+        <td>⑪ 用 NVDA 跑一遍完整五步，验证美股侧<br>⑫ 参数寻优（Sortino 目标）</td>
+        <td>验证与优化放在最后——在规则未定、成本未建模时做寻优，等于在流沙上盖楼</td>
+        <td>—</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="warn"><b>为什么把"确认两次动作"放在最前面：</b>它不是准备工作，而是<b>整个系统的第一个数据点</b>。如果这两次动作都执行了，说明你的问题在参数（止损设得太紧被洗盘）；如果都没执行，说明问题在权限（人比系统更容易手软），那要改的是执行机制而不是参数。<b>这两种情况下，后续所有调整的方向是相反的。</b></div>
+</section>
+
+<footer>
+  <div class="src">
+    复审对象：《五步法推进方案》（2026-10-08）。<br>
+    本轮新增外部核验：<br>
+    ① A 股交易费用结构——印花税 <b>0.05% / 卖出单边</b>，经 2025-11 与 2026-09 两批独立公开资料交叉确认；佣金、过户费、规费因人而异，标注为需你从券商对账单提供。<br>
+    ② 中国波指（iVIX / 000188）状态——<b>证据冲突，标记为待核实</b>：CEIC 数据显示观测值止于 2018-02-14；另有 2025-06 的公开消息称上交所发布新的波动率指数；新浪财经 2026-09-28 仍挂有该指数行情页。三个来源指向不同结论，不做单方采信。<br>
+    本报告中的所有修正判断均基于"阈值须有统计或回测来源"与"数据源冲突须显式标注"两条原则。<br>
+    本报告为方法论复审，不构成对任何标的的投资建议。文中涉及的具体标的数字仅用于说明方法论问题。
+  </div>
+  <div>
+    <b>免责声明：</b>以上内容基于公开数据和量化分析，仅供参考，不构成投资建议。市场有风险，投资需谨慎。任何投资决策应结合个人风险承受能力、资金状况和投资目标独立判断，必要时咨询持牌专业机构。过往表现不预示未来收益。
+  </div>
+</footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>五步法逐条推进方案 · A股/美股双市场投研系统</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+  :root{
+    --ink:#16181d; --ink2:#4a4f5a; --ink3:#828a97;
+    --line:#e3e6ec; --line2:#f0f2f6;
+    --bg:#f6f7f9; --card:#ffffff;
+    --up:#c0392b; --down:#1e8449;
+    --accent:#1f5fa8; --accent-bg:#eef4fb;
+    --warn:#a35b00; --warn-bg:#fdf5e6;
+    --bad:#a3272b; --bad-bg:#fdeeee;
+    --ok:#1e6b3f; --ok-bg:#eaf5ee;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:14px;line-height:1.72;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 24px 64px;}
+  header.top{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:28px 30px;margin-bottom:20px;}
+  header.top h1{margin:0 0 8px;font-size:23px;font-weight:600;letter-spacing:-.2px;}
+  header.top .sub{color:var(--ink2);font-size:13.5px;margin-bottom:14px;}
+  header.top .meta{color:var(--ink3);font-size:12.5px;border-top:1px solid var(--line2);padding-top:12px;}
+  section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:26px 30px;margin-bottom:20px;}
+  h2{font-size:17px;font-weight:600;margin:0 0 6px;letter-spacing:-.1px;}
+  h2 .tag{font-size:11.5px;font-weight:500;color:var(--accent);background:var(--accent-bg);
+    border-radius:5px;padding:2px 7px;margin-left:8px;vertical-align:2px;}
+  h3{font-size:14.5px;font-weight:600;margin:22px 0 10px;}
+  h3:first-of-type{margin-top:14px;}
+  h4{font-size:13.5px;font-weight:600;margin:18px 0 8px;color:var(--ink);}
+  p{margin:8px 0;}
+  .lead{color:var(--ink2);font-size:13.5px;margin-bottom:14px;}
+  ul,ol{margin:8px 0;padding-left:22px;}
+  li{margin:5px 0;}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0;}
+  th{background:#fafbfc;color:var(--ink2);font-weight:600;text-align:left;
+    padding:9px 11px;border-bottom:1.5px solid var(--line);font-size:12.5px;white-space:nowrap;}
+  td{padding:9px 11px;border-bottom:1px solid var(--line2);vertical-align:top;}
+  tr:last-child td{border-bottom:none;}
+  td.mono,th.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;}
+  .v{font-weight:600;}
+  .pill{display:inline-block;font-size:11.5px;padding:1px 7px;border-radius:5px;line-height:1.6;white-space:nowrap;}
+  .pill.ok{background:var(--ok-bg);color:var(--ok);}
+  .pill.mid{background:var(--warn-bg);color:var(--warn);}
+  .pill.bad{background:var(--bad-bg);color:var(--bad);}
+  .pill.info{background:var(--accent-bg);color:var(--accent);}
+  .blk{border-left:3px solid var(--line);padding:2px 0 2px 16px;margin:16px 0;}
+  .blk.q{border-color:var(--accent);}
+  .blk.s{border-color:var(--ok);}
+  .blk.r{border-color:var(--warn);}
+  .blk.g{border-color:var(--bad);}
+  .blk.a{border-color:#534AB7;}
+  .blk .bt{font-size:12px;font-weight:600;letter-spacing:.5px;margin-bottom:6px;}
+  .blk.q .bt{color:var(--accent);}
+  .blk.s .bt{color:var(--ok);}
+  .blk.r .bt{color:var(--warn);}
+  .blk.g .bt{color:var(--bad);}
+  .blk.a .bt{color:#534AB7;}
+  .blk p,.blk ul,.blk ol{margin:6px 0;}
+  .blk .qt{font-size:14px;color:#1c3d63;font-weight:500;margin:8px 0;line-height:1.7;}
+  .note{background:var(--accent-bg);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;
+    padding:12px 16px;font-size:13px;color:#1c3d63;margin:14px 0;}
+  .warn{background:var(--warn-bg);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;
+    padding:12px 16px;font-size:13px;color:#6b3d00;margin:14px 0;}
+  .bad{background:var(--bad-bg);border-left:3px solid var(--bad);border-radius:0 8px 8px 0;
+    padding:12px 16px;font-size:13px;color:#6d1a1d;margin:14px 0;}
+  .note b,.warn b,.bad b{font-weight:600;}
+  .chartbox{border:1px solid var(--line);border-radius:11px;padding:14px 14px 6px;margin:14px 0;}
+  .chartbox .ct{font-size:13px;font-weight:600;margin-bottom:2px;}
+  .chartbox .cs{font-size:11.5px;color:var(--ink3);margin-bottom:8px;line-height:1.5;}
+  .chart{width:100%;height:400px;}
+  .stephead{display:flex;align-items:baseline;gap:10px;border-bottom:2px solid var(--line);padding-bottom:10px;margin-bottom:4px;}
+  .stephead .no{font-size:26px;font-weight:600;color:var(--accent);line-height:1;}
+  .stephead .ti{font-size:17px;font-weight:600;}
+  .stephead .st{margin-left:auto;font-size:12px;color:var(--ink3);}
+  footer{margin-top:8px;padding:20px 30px;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;font-size:12.5px;color:var(--ink2);line-height:1.75;}
+  footer .src{color:var(--ink3);font-size:12px;margin-bottom:10px;}
+  @media(max-width:860px){
+    .wrap{padding:18px 14px 40px;}
+    section{padding:20px 18px;}
+    .tblwrap{overflow-x:auto;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <h1>五步法逐条推进方案 · A股 / 美股双市场投研系统</h1>
+  <div class="sub">按你最初提出的五步法逐条推进：每步给出引发深入思考的提问、可落地的方案、支撑用的开源项目，并覆盖当前进展 / 缺口 / 后续行动</div>
+  <div class="meta">生成日期 2026-10-08 &nbsp;·&nbsp; 事实依据来自前三轮：交易框架数据核对（科伦药业 002422.SZ）、选股研报模板库设计、GitHub 开源选型（全部经 API 实时取数）&nbsp;·&nbsp; 文中所有标的数字均带来源与时点</div>
+</header>
+
+<section>
+  <h2>零、总览：五步法当前状态</h2>
+  <p class="lead">先看清一件事——<b>你的五步法并不均匀。有的步骤已经有可执行规则，有的还停在名词层面。</b>下面按"规则可量化度 / 数据可获取度 / 动作可执行度"三个维度给出评估，用来定位该先修哪一步。</p>
+  <div class="chartbox">
+    <div class="ct">五步法三维完备度评估</div>
+    <div class="cs">评分口径：基于前三轮数据核对与模板设计结果的主观评估（0–5 分），非客观指标。<b>规则可量化度</b>=判据能否写成可计算的阈值；<b>数据可获取度</b>=所需字段在当前数据源下能否稳定取得；<b>动作可执行度</b>=触发后是否对应明确、无歧义的操作。</div>
+    <div id="chartRadar" class="chart"></div>
+  </div>
+  <div class="note"><b>读法：</b>三根线里最贴中心的那条，就是这个步骤的瓶颈。第二、三、五步的<b>动作可执行度都是 1–2 分</b>——意味着它们目前更接近"研究框架"而非"交易系统"。而第四步的动作可执行度最高（3 分），却恰恰是<b>已经触发过而你未确认是否执行</b>的那一步。这个组合本身就说明问题：<b>规则写得最清楚的地方，恰好是最难执行的地方。</b></div>
+
+  <h3>五步 × 进展 / 缺口 / 行动</h3>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:4%">#</th><th style="width:17%">步骤</th><th style="width:26%">当前进展</th><th style="width:26%">主要缺口</th><th style="width:27%">下一步动作</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><b>好公司池构建</b><br>基本面过滤</td><td>已有三条初筛门槛；已识别科伦药业不满足初筛、应入困境反转池</td><td>"困境反转池"无准入边界；缺扣非口径；<b>选股筛选模板被你跳过</b>；无排除日志</td><td>补"扣非净利同比"硬门槛；定义困境反转池的 4 条准入条件；建排除日志</td></tr>
+      <tr><td>2</td><td><b>多维监控信号</b><br>量化因子</td><td>已列 11 个指标；已取得科伦药业完整技术面快照</td><td>无优先级、无三态定义、无冲突规则、无信号衰减；<b>VIX/VXN 在 A 股无对应物</b></td><td>11 指标压到 3 层 5 指标，每层给三态；补信号衰减窗口；A 股波动率改用个股年化波动率分位</td></tr>
+      <tr><td>3</td><td><b>大资金流向验证</b><br>核心决策层</td><td>已有板块层扫描条件；已取得融资余额 / 基金持股 / 龙虎榜数据</td><td><b>板块条件未映射到个股动作</b>；缺拥挤度维度；"主力资金"口径是第三方黑箱</td><td>改为个股资金结构诊断（水位/方向/结构/筹码）；加拥挤度；考虑用逐笔数据自建大单口径</td></tr>
+      <tr><td>4</td><td><b>信号触发 → 小仓位试仓</b><br>风控前置</td><td>已设 40 元止损 / 42 元保护 / 分批止盈；<b>已核对出 42 元与 40 元条件分别在 8/24 与 9/29 成立</b></td><td>仓位与止损的因果顺序反了；无回撤预算锚点；缓冲参数未回测；止损锚定成本而非波动率</td><td>改为风险预算法（先定损失再算仓位）；ATR 替代固定整数；"3 日缓冲"做成回测参数</td></tr>
+      <tr><td>5</td><td><b>长期持有与动态调整</b><br>信号变化退出</td><td>已有 4 项监控清单；已核对出三季报披露日 10/29（清单中缺失）</td><td><b>监控项无阈值、无动作</b>；缺财报日历；缺两次财报之间 90 天的持有依据</td><td>4 项监控全部补"变坏阈值 + 动作"；建财报日历；定义空窗期持有依据</td></tr>
+      <tr><td>6</td><td><b>复盘迭代</b><br>闭环核心</td><td>已有四维复盘设计；<b>已产生真实复盘素材（8/24、9/29 两次动作）</b></td><td>缺"计划 vs 实际"对账数据；缺参数白名单；缺寻优目标函数</td><td>先回答两次动作是否执行；定参数白名单；把卡玛比率定为寻优目标</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2>跨步骤的三个共性问题<span class="tag">先看这个，再看分步</span></h2>
+  <p class="lead">逐条推进之前，有三件事在五步里反复出现。它们不是某一 步的缺口，而是整个框架的结构性问题。</p>
+
+  <div class="blk g">
+    <div class="bt">共性问题 1 · 板块条件 ↔ 个股动作的断层</div>
+    <p>第三步的扫描条件是<b>板块层</b>的（涨幅 &gt;3%、涨停 ≥3 只、有连板龙头），但你要做的决策是<b>个股层</b>的（买哪只、买多少）。两者之间缺一个映射。</p>
+    <p>更麻烦的是：这个断层在第一步就埋下了。你跳过"选股筛选研报"，等于放弃了批量淘汰；于是后面的每一步都要在"标的池没被筛过"的前提下做判断。</p>
+  </div>
+
+  <div class="blk g">
+    <div class="bt">共性问题 2 · 观察项 ≠ 触发条件</div>
+    <p>你的框架里大量出现"是否……""能否……"这类问句：营收增速是否转正？毛利率是否止跌？融资是否大幅流出？</p>
+    <p>这些是<b>观察项</b>，不是<b>触发条件</b>。触发条件必须长成"若 X 则 Y"的形式，其中 X 可计算、Y 是一个动作。第二步到第五步，目前没有一条真正满足这个形式。</p>
+  </div>
+
+  <div class="blk g">
+    <div class="bt">共性问题 3 · 数据时效未与规则绑定</div>
+    <p>上一轮核对出：45.44 元是 8/7 的收盘价而非当前价；"38.52 前低"其实不是前低；46 倍 PE 实际是 34–36 倍。这三处过期，直接让第四步的止损档位全部失真。</p>
+    <p><b>规则一旦写死价位，就必须同时绑定取数时间戳。</b>否则规则会随时间自动变成错的，而且不会报错。</p>
+  </div>
+</section>
+
+<section>
+  <div class="stephead"><div class="no">01</div><div class="ti">好公司池构建 · 基本面过滤</div><div class="st">瓶颈：动作可执行度 2/5</div></div>
+
+  <div class="blk">
+    <div class="bt">当前进展</div>
+    <ul>
+      <li>初筛门槛已定：营收增速 &gt;20%、经营现金流为正、毛利率稳定。</li>
+      <li>已用真实数据验证门槛有效：科伦药业 2025 财年营收 185.13 亿元（<span class="v">−15.13%</span>）、归母净利 17.02 亿元（<span class="v">−42.03%</span>），不满足初筛，你已将其划入"困境反转 / 创新药期权池"。</li>
+      <li>数据核对额外发现一条关键事实：<b>2026H1 归母净利 11.28 亿元（+12.71%），但扣非净利 6.99 亿元（−29.03%）</b>，背离 41.7 个百分点。</li>
+    </ul>
+  </div>
+
+  <div class="blk q">
+    <div class="bt">深入提问</div>
+    <p class="qt">① 你的初筛条件里，"营收增速 &gt;20%" 是一条<b>成长型</b>门槛。科伦药业 2026H1 营收同比几乎零增长、扣非还在下滑——它本来就不该出现在成长池的候选名单里。那么：<b>你是先有股票池，还是先有筛选标准？</b></p>
+    <p class="qt">② "困境反转池"的准入条件是什么？如果没写，它就是一个收容所——因为任何被淘汰的标的，都可以被解释成"困境反转"。</p>
+    <p class="qt">③ 一个筛选标准的价值，该用"选中了多少好股票"衡量，还是用"排除了多少坏股票"衡量？如果你同意是后者，那<b>你现在没有任何关于"被排除标的后来涨没涨"的记录</b>，也就无法评估这个标准。</p>
+  </div>
+
+  <div class="blk s">
+    <div class="bt">落地方案 · 双池三门槛 + 排除日志</div>
+    <div class="tblwrap">
+    <table>
+      <thead><tr><th style="width:16%">池</th><th style="width:54%">准入条件（须全部满足）</th><th style="width:30%">说明</th></tr></thead>
+      <tbody>
+        <tr><td><b>稳健成长池</b></td><td>① 营收增速 &gt;20%　② 经营现金流净额为正　③ 毛利率连续 3 期不下滑　④ <b>扣非净利同比 &gt;0</b>（新增）</td><td>第 ④ 条是本次新增，直接来自扣非背离 41.7pct 的发现</td></tr>
+        <tr><td><b>困境反转池</b></td><td>① 扣非净利同比降幅连续 2 期收窄　② 经营现金流转正　③ <b>有单一、可命名的反转驱动</b>　④ 资产负债率 &lt;60%</td><td>第 ③ 条是硬约束：说不出驱动是什么，就不许进池</td></tr>
+        <tr><td><b>排除池</b></td><td>不满足上述任一条</td><td>记录标的 + 排除原因 + 排除日，用于事后校准</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p><b>排除日志是本步最关键的产出。</b>每周统计一次：上周被排除的标的里，有多少后来涨了。若占比持续偏高，说明门槛设错；若极低，说明门槛有效。这是唯一能让筛选标准自我校准的机制。</p>
+  </div>
+
+  <div class="blk r">
+    <div class="bt">开源支撑</div>
+    <ul>
+      <li><b>akfamily/akshare</b>（22,851★ / MIT / 2026-10-07）—— 提供财务报表、行业分类、分红送配等基本面字段。<b>可借鉴</b>：返回 pandas DataFrame，可直接接筛选逻辑。注意它给的是原始数据，筛选规则仍需自建。</li>
+      <li><b>microsoft/qlib</b>（49,210★ / MIT）—— Alpha158 / Alpha360 因子集含基本面因子。<b>可借鉴</b>：它的因子表达式语法（如 <code>Ref($close,1)/$close-1</code>）可以把筛选条件写成声明式表达式，比写 pandas 链更清晰，且天然规避前视偏差。</li>
+      <li><span class="pill bad">反例</span> <b>1nchaos/adata</b>（5,259★ / Apache-2.0）—— Star 不低，但最后提交 <b>2025-12-26</b>，停更近 10 个月。<b>教训</b>：数据层库一旦停更，接口失效只是时间问题，不适合作为长期依赖。</li>
+    </ul>
+  </div>
+
+  <div class="blk g">
+    <div class="bt">缺口清单</div>
+    <ul>
+      <li>缺"选股筛选研报"模板——你上轮明确未选，而它是五份模板里唯一带否决权的。</li>
+      <li>"困境反转池"无量化准入边界。</li>
+      <li>扣非口径完全缺失，导致"是否改善"的判断会反向。</li>
+      <li>无排除日志，筛选标准无法自我校准。</li>
+    </ul>
+  </div>
+
+  <div class="blk a">
+    <div class="bt">后续行动</div>
+    <ol>
+      <li>补一份最简版"选股筛选研报"：只需要"门槛 + 否决原因"两栏，不必做全。</li>
+      <li>把"扣非净利同比"加进硬门槛，与归母口径并列显示，背离超 15pct 时强制标注原因。</li>
+      <li>建立排除日志并落盘，设定每周复盘节奏。</li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <div class="stephead"><div class="no">02</div><div class="ti">多维监控信号 · 量化因子计算</div><div class="st">瓶颈：规则可量化度 2/5</div></div>
+
+  <div class="blk">
+    <div class="bt">当前进展</div>
+    <ul>
+      <li>指标清单已列：MA、RSI、MACD、KDJ、布林带，外加腾讯实时行情、新闻情绪、VIX/VXN、两融余额。</li>
+      <li>已取得科伦药业完整技术面快照（2026-10-08）：价 <span class="v">39.26</span> &lt; MA10 40.29 &lt; MA20 40.57 &lt; MA60 43.50，位于年线 35.94 上方；RSI6 <span class="v">42.61</span>（中性偏弱）；KDJ J <span class="v">23.62</span>（偏超卖）；BOLL 下轨 38.34。</li>
+      <li><b>注意一处反向事实：</b>你的框架写"RSI/KDJ 可能进入超买区域，需监控冲高乏力"，而实测是<b>偏超卖</b>。这是数据过期的又一次后果——同样的指标，方向读反了。</li>
+    </ul>
+  </div>
+
+  <div class="blk q">
+    <div class="bt">深入提问</div>
+    <p class="qt">① 你列了 11 个指标。如果它们同时给出矛盾信号（MACD 金叉、但 RSI 偏弱、KDJ 超卖、价格在年线上方），你的决策顺序是什么？<b>没有优先级的多指标，等于没有指标。</b></p>
+    <p class="qt">② 技术指标是价格的函数，而价格是"市场已经发生的事"。那么用技术指标做决策，你赚的是"别人反应慢"的钱，还是"趋势会延续"的钱？这两个假设需要完全不同的止损方式。</p>
+    <p class="qt">③ 你的框架里有"高波动预警"这个动作。但预警之后呢？预警本身不改变仓位。<b>一个不改变任何行为的预警，为什么还要做？</b></p>
+  </div>
+
+  <div class="blk s">
+    <div class="bt">落地方案 · 三层五指标 + 三态 + 衰减</div>
+    <div class="tblwrap">
+    <table>
+      <thead><tr><th style="width:14%">层</th><th style="width:20%">指标</th><th style="width:36%">三态定义</th><th style="width:30%">回答什么问题</th></tr></thead>
+      <tbody>
+        <tr><td><b>趋势层</b><br>（最高优先）</td><td>MA5/10/20/60 排列<br>价格 vs MA250</td><td>多头 = 短中长期依次向上且价在年线上方；空头 = 反向；其余为中性</td><td>能不能买</td></tr>
+        <tr><td><b>动量层</b></td><td>MACD（DIF/DEA/柱）<br>RSI6 / RSI12</td><td>多头 = DIF 上穿 DEA 且柱转正；空头 = 反向；其余为中性</td><td>什么时候买</td></tr>
+        <tr><td><b>极值层</b></td><td>KDJ（J 值）<br>BOLL（位置）</td><td>超买 = J&gt;100 或触上轨；超卖 = J&lt;0 或触下轨；其余为中性</td><td>要不要等</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p><b>冲突解决规则（本步最关键）：趋势层优先。</b>趋势层为空头时，动量层金叉不构成入场信号。这条规则的作用不是提高胜率，而是<b>让你不必在盘中现场裁决</b>——现场裁决就是情绪决策的入口。</p>
+    <p><b>信号衰减：</b>信号生成后 N 个交易日内未触发动作即失效。防止"三天前的金叉今天才执行"——那是拿旧信息做新决策。</p>
+    <p><b>A 股波动率替代方案：</b>VIX 是标普 500 的波动率指标，A 股没有直接对应物（中国波指已停止发布）。改用<b>个股 60 日年化波动率的历史分位</b>——它直接回答"这只股票现在比它自己平时更波动吗"，比强行套用一个境外指数更有意义。</p>
+  </div>
+
+  <div class="blk r">
+    <div class="bt">开源支撑</div>
+    <ul>
+      <li><b>TA-Lib/ta-lib-python</b>（12,274★ / BSD-2-Clause / 2026-09-21）—— 技术指标的事实标准。<b>可借鉴</b>：C 核心 + Cython 绑定，批量计算速度远超纯 pandas 实现。<b>但要注意部署门槛</b>：需先安装底层 C 库，比纯 Python 包麻烦，容器化时需在 Dockerfile 里加装系统依赖。</li>
+      <li><b>xgboosted/pandas-ta-classic</b>（449★ / MIT / 2026-10-02）—— 已消失的 pandas-ta 的社区继任者。<b>可借鉴</b>：纯 Python、无外部依赖，部署门槛低，适合作降级备选。<b>它本身就是"原库 404 后如何选替代"的实例</b>。</li>
+      <li><b>TauricResearch/TradingAgents</b>（110,163★ / Apache-2.0）—— 依赖中用的是 <code>stockstats</code> 而非 TA-Lib。<b>可借鉴</b>：在 LLM agent 场景里，"够用且好装"比"指标最全"更重要——因为瓶颈在 token 与延迟，不在计算速度。</li>
+    </ul>
+  </div>
+
+  <div class="blk g">
+    <div class="bt">缺口清单</div>
+    <ul>
+      <li>11 个指标无优先级、无三态定义、无冲突解决规则、无衰减机制。</li>
+      <li>"新闻情绪"没有量化口径——情绪如何变成一个可比较的数？</li>
+      <li>VIX/VXN 在 A 股无对应物，这一步目前是不可迁移的。</li>
+      <li>指标与持仓状态未关联：同一指标在"空仓"和"持仓"下应给出不同动作，目前混在一起。</li>
+    </ul>
+  </div>
+
+  <div class="blk a">
+    <div class="bt">后续行动</div>
+    <ol>
+      <li>把 11 个指标压缩到 3 层 5 个，每个给出三态定义与阈值。</li>
+      <li>补写冲突解决规则，明确趋势层优先。</li>
+      <li>设定信号衰减窗口，并做成可回测参数。</li>
+      <li>A 股波动率改用个股年化波动率分位；美股保留 VIX。</li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <div class="stephead"><div class="no">03</div><div class="ti">大资金流向验证 · 核心决策层</div><div class="st">瓶颈：动作可执行度 1/5</div></div>
+
+  <div class="blk">
+    <div class="bt">当前进展</div>
+    <ul>
+      <li>板块扫描条件已定：涨幅 &gt;3% + 涨停 ≥3 只 + 有连板龙头。</li>
+      <li>已取得科伦药业资金面实测数据：8/19 融资余额 <span class="v">8.94 亿元</span>，占流通市值 1.25%，<b>超近一年 80% 分位</b>；9/29 融资净卖出 143 万元、9/30 净卖出 2932 万元；基金持股比例 <span class="v">14.89%</span>（较上期 <b>+3.82pct</b>），主动偏股基金 122 家（较上期 +46 家）。</li>
+      <li><b>你的框架结论是"资金合力不足，短线博弈成分高"</b>——但同期基金大幅增配、近 6 个月机构评级买入/增持占比 100%。这个定性需要重新权衡。</li>
+    </ul>
+  </div>
+
+  <div class="blk q">
+    <div class="bt">深入提问</div>
+    <p class="qt">① 你的三条扫描条件全在<b>板块层</b>。但你要买的是<b>个股</b>。板块满足条件时，你如何决定买板块里的哪一只？<b>如果答不上来，这个筛选就没有落到可执行的动作上。</b></p>
+    <p class="qt">② 融资余额在近一年 80% 分位——这算"资金流入"还是"拥挤风险"？同一个数据，两种解读对应完全相反的仓位。<b>你用什么来区分这两者？</b></p>
+    <p class="qt">③ 美股没有"主力资金"这个概念（它是由 A 股平台按单笔金额阈值推算的）。如果你的第三步依赖它，这一步本身就不可迁移。你打算替换指标，还是承认它只在 A 股有效？</p>
+  </div>
+
+  <div class="blk s">
+    <div class="bt">落地方案 · 从板块扫描改为个股资金结构诊断</div>
+    <div class="tblwrap">
+    <table>
+      <thead><tr><th style="width:12%">维度</th><th style="width:26%">A 股指标</th><th style="width:26%">美股替换指标</th><th style="width:36%">判读规则</th></tr></thead>
+      <tbody>
+        <tr><td><b>水位</b></td><td>融资余额历史分位、基金持股比例</td><td>机构持股比例（Institutional Ownership）</td><td>&gt;80% 分位 = 拥挤；&lt;30% = 冷清。<b>水位只描述状态，不构成买卖信号</b></td></tr>
+        <tr><td><b>方向</b></td><td>近 5/20 日融资净买卖、主力资金净流入</td><td>13F 持仓变动、资金流 ETF</td><td>方向转负 + 水位高 = 风险信号（而非买入信号）</td></tr>
+        <tr><td><b>结构</b></td><td>龙虎榜席位性质（机构 / 游资）、大宗交易折价率</td><td>期权流、暗池占比</td><td>机构席位买入 = 支持；纯游资 + 高折价大宗 = 背离</td></tr>
+        <tr><td><b>筹码</b></td><td>股东户数变动</td><td>空头持仓占流通股（Short Interest）</td><td>户数下降 = 筹码集中；空头上升 = 压力累积</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p><b>核心改造：加入"拥挤度"维度。</b>你原来的框架只问"资金是否大幅流出"（方向），但融资余额已在 80% 分位（水位）——<b>高位 + 方向转负，是下跌被杠杆放大的前兆，不是抄底信号。</b>方向和水位是两个问题，必须分开看。</p>
+    <p><b>输出形式：</b>每个标的给出 <code>资金结构评级</code>（支持 / 中性 / 背离）加四项明细，取代"合力足不足"这类定性词。评级可直接进模板字段。</p>
+  </div>
+
+  <div class="blk r">
+    <div class="bt">开源支撑</div>
+    <ul>
+      <li><b>akshare</b> —— 提供两融、龙虎榜、股东户数、大宗交易、基金持股等接口。<b>可借鉴</b>：这些是 A 股特有的资金面字段，正好补上"市场适配层"。</li>
+      <li><b>electkismet/eltdx</b>（561★ / <span class="pill bad">NOASSERTION</span> / 2026-10-05，Rust）—— 通达信行情协议，支持<b>快照、分时、逐笔、集合竞价</b>。<b>可借鉴</b>：有了逐笔数据，你可以<b>自建大单净额口径</b>，替代第三方"主力资金"的黑箱算法——不同平台算法不同、结果不可复现，自建才能回测。</li>
+      <li><b>simonlin1212/TradingAgents-astock</b>（3,640★ / Apache-2.0）—— README 明确提到龙虎榜、游资、解禁。<b>可借鉴</b>：它把 A 股特有资金面数据封装成了 agent 工具，可参考其字段选择与提示词设计。<b>但作者近期提交为求职公告，维护连续性存疑，宜作参考实现而非长期依赖。</b></li>
+      <li><span class="pill bad">协议警示</span> <b>oficcejo/aiagents-stock</b>（1,996★）—— <b>协议字段为 NONE（无任何协议）</b>。无协议不等于随便用，而是默认保留所有权利。Star 不低，但直接商用或分发有法律风险。</li>
+    </ul>
+  </div>
+
+  <div class="blk g">
+    <div class="bt">缺口清单</div>
+    <ul>
+      <li><b>板块条件未映射到个股动作</b>——本步最大的断层。</li>
+      <li>缺"拥挤度"维度，导致高位被误读为流入。</li>
+      <li>第三方"主力资金"口径不透明、不可复现，无法回测验证。</li>
+      <li>无美股侧的替代指标实现。</li>
+    </ul>
+  </div>
+
+  <div class="blk a">
+    <div class="bt">后续行动</div>
+    <ol>
+      <li>补写"板块 → 个股"的映射规则：板块满足条件后，用哪几个个股指标排序取前 N 只。</li>
+      <li>加入拥挤度维度，把水位与方向拆成两个独立字段。</li>
+      <li>评估用 eltdx 逐笔数据自建大单口径的可行性（注意先确认其协议）。</li>
+      <li>为美股侧实现四维资金结构的替代指标。</li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <div class="stephead"><div class="no">04</div><div class="ti">信号触发 → 小仓位试仓 · 风控前置</div><div class="st">瓶颈：参数锚点已过期</div></div>
+
+  <div class="blk">
+    <div class="bt">当前进展</div>
+    <ul>
+      <li>风控档位已设：40 元强制止损（跌破且 3 日未收回减半）、42 元保护线（浮亏约 7% 减半）、50–52 元减 1/3、55–58 元再减 1/3、38 元清仓；仓位限定 8%–12%。</li>
+      <li><b>数据核对的关键结论：按这套规则自己的条件——</b>42 元保护线已于 <b>2026-08-24</b> 首次跌破（收 41.44）；40 元止损线在 9/11、9/18 两次假跌破后，<b>9/24（38.86）、9/28（38.60）、9/29（39.22）连续三个交易日收盘低于 40 元，条件于 9/29 收盘正式成立</b>。</li>
+      <li>当前价 39.26 元，距 38 元清仓线仅约 <b>3.3%</b>。</li>
+    </ul>
+  </div>
+
+  <div class="blk q">
+    <div class="bt">深入提问</div>
+    <p class="qt">① 你的 40 元止损是基于 45.44 的成本算出来的（约 −12%）。但如果有人今天以 39.26 建仓，同一个 40 元对他来说是<b>止盈</b>。那么：<b>止损线应该锚定成本，还是锚定波动率？</b></p>
+    <p class="qt">② 你设了"跌破且 3 日未收回"这个缓冲，作用是过滤假跌破。但代价是多承担 3 天的下跌。<b>你有没有算过，这个缓冲历史上过滤掉的假跌破，和它多承担的真跌破，哪个更多？</b>——从实测看，9/11 和 9/18 两次确实是假跌破，缓冲起了作用；但 9/24 之后连跌三天，缓冲没起作用。</p>
+    <p class="qt">③ 你的仓位规则是"8%–12%"。这是<b>先定仓位再找止损</b>，还是<b>先定止损再算仓位</b>？这两种顺序在数学上给出完全不同的结果——而且只有后者能保证单笔最大损失可控。</p>
+  </div>
+
+  <div class="blk s">
+    <div class="bt">落地方案 · 风险预算法（反推仓位）</div>
+    <p>把因果顺序倒过来。现在的顺序是"先决定买 10%，再想止损放哪"；正确顺序是：</p>
+    <ol>
+      <li><b>先定单笔最大可承受损失</b>——如总资金的 1%（这个数由你的回撤预算决定，不由行情决定）。</li>
+      <li><b>再定止损宽度</b>——用 ATR 倍数（如 2×ATR20），而非固定整数。固定整数止损在低波动期过宽、高波动期过窄。</li>
+      <li><b>仓位 = 单笔风险预算 ÷ 止损宽度</b>——于是"8%–12%"不再是拍脑袋的数字，而是计算结果；不同标的会自然得到不同仓位。</li>
+    </ol>
+    <div class="tblwrap">
+    <table>
+      <thead><tr><th style="width:24%">改造项</th><th style="width:34%">原设计</th><th style="width:42%">改造后</th></tr></thead>
+      <tbody>
+        <tr><td>止损锚</td><td>固定价位 40 元（基于成本 −12%）</td><td>结构位（跌破前低）<b>或</b> 单日跌幅 &gt; 2×ATR20，双条件任一触发</td></tr>
+        <tr><td>缓冲机制</td><td>写死"3 日未收回"</td><td>做成可回测参数（1/2/3/5 日），用 Walk-Forward 找最优</td></tr>
+        <tr><td>仓位来源</td><td>拍定 8%–12%</td><td>由"单笔风险预算 ÷ 止损宽度"反推</td></tr>
+        <tr><td>止损优先级</td><td>只有价格止损</td><td>新增<b>逻辑止损</b>：扣非持续下滑等基本面证伪，优先级高于价格止损</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p><b>为什么逻辑止损要前置：</b>价格止损回答"我亏了多少"，逻辑止损回答"我为什么买它还成立吗"。前者是结果，后者是原因。如果原因已经不成立，继续用价格止损等反弹，本质是在赌运气。</p>
+  </div>
+
+  <div class="blk r">
+    <div class="bt">开源支撑</div>
+    <ul>
+      <li><b>dcajasn/Riskfolio-Lib</b>（4,537★ / BSD-3-Clause / 2026-10-04）—— 提供 CVaR / CDaR / EVaR 等下行风险度量。<b>可借鉴</b>：你的"单笔最大可承受损失"可以用 CVaR 定义而非固定百分比——CVaR 直接回答"最坏的 5% 情况下我会亏多少"，比"亏 1% 就停"更有依据。</li>
+      <li><b>skfolio/skfolio</b>（2,468★ / BSD-3-Clause / 2026-10-07，近 5 周 110 次提交）—— scikit-learn 风格的组合优化 API。<b>可借鉴</b>：<code>fit/predict</code> 接口可以直接嵌进自动化流程；<b>活跃度是同类里最高的</b>，比 PyPortfolioOpt 更适合长期依赖。</li>
+      <li><b>microsoft/qlib</b> —— Walk-Forward 训练与组合优化模块，直接对应本步的"参数寻优"需求。</li>
+      <li><span class="pill mid">活性下降</span> <b>PyPortfolio/PyPortfolioOpt</b>（6,079★ / MIT）—— 功能经典（有效前沿、Black-Litterman），<b>但近 5 周提交量为 0</b>（最后推送 2026-07-07）。选型时需注意。</li>
+      <li><span class="pill bad">协议警示</span> <b>kernc/backtesting.py</b>（9,017★）—— 协议是 <b>AGPL-3.0</b>。这是本次检索里最容易踩的坑：AGPL 比 GPL 更严，<b>通过网络提供服务也要开源</b>。若仅作内部研究工具尚可，一旦产品化必须重新评估。</li>
+    </ul>
+  </div>
+
+  <div class="blk g">
+    <div class="bt">缺口清单</div>
+    <ul>
+      <li>仓位与止损的因果顺序反了——先定仓位再找止损，无法保证风险可控。</li>
+      <li>无回撤预算锚点："8%–12%"没有对应的总资金基数与单笔损失上限。</li>
+      <li>缓冲天数写死，未经回测验证。</li>
+      <li>逻辑止损缺失，导致基本面证伪时仍在用价格止损等反弹。</li>
+      <li><b>规则中的价位已过期</b>（45.44 为 8/7 收盘价），需重新绑定取数时间戳。</li>
+    </ul>
+  </div>
+
+  <div class="blk a">
+    <div class="bt">后续行动</div>
+    <ol>
+      <li>把仓位规则改为风险预算法，明确"总资金 × 单笔风险预算"这个锚点。</li>
+      <li>止损改用"结构位 + ATR 倍数"双条件，替换固定整数。</li>
+      <li>把"3 日缓冲"做成可回测参数，跑 Walk-Forward 定值。</li>
+      <li>定义逻辑止损的 3 个可观测触发条件。</li>
+      <li><b>先确认 8/24 与 9/29 两次动作是否执行</b>——这决定后续所有参数怎么调。</li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <div class="stephead"><div class="no">05</div><div class="ti">长期持有与动态调整 · 信号变化退出</div><div class="st">瓶颈：规则可量化度 1/5</div></div>
+
+  <div class="blk">
+    <div class="bt">当前进展</div>
+    <ul>
+      <li>监控清单已列 4 项：半年报（营收增速是否转正、毛利率是否止跌）、科伦博泰销售、川宁生物（抗生素价格 / 合成生物收入）、股东户数与融资余额。</li>
+      <li>已核对出披露时间：半年报实际 <b>2026-08-27</b> 披露；<b>三季报预约披露日 2026-10-29</b>——<b>你清单里没有这一项</b>，而它距当前只有 3 周。</li>
+      <li>已核对出关键数据：2026H1 归母 +12.71% 但扣非 −29.03%；科伦博泰 3.88 亿元利润中含 7.03 亿元一次性和解收入 + 1.40 亿元退税。</li>
+    </ul>
+  </div>
+
+  <div class="blk q">
+    <div class="bt">深入提问</div>
+    <p class="qt">① 你的清单写"营收增速是否转正？毛利率是否止跌？"——但没写"如果营收转正了、扣非却在跌，算好转还是恶化？"<b>一个没有阈值和优先级的观察清单，读起来像研究，用起来像安慰。</b></p>
+    <p class="qt">② 你提到"信号从持有转为风控观察时触发减仓"。那么：<b>谁来决定这个转换？</b>如果是你自己在盘中判断，那这就是主观决策，不是系统信号——而它出现在"系统化"的第五步里。</p>
+    <p class="qt">③ 你的四个监控项里，三个（科伦博泰销售、川宁生物、股东户数）的披露频率是季度。但价格每天都在动。<b>在两次财报之间的 90 天里，你的持有依据是什么？</b></p>
+  </div>
+
+  <div class="blk s">
+    <div class="bt">落地方案 · 监控清单 → 验证表</div>
+    <p>把"看什么"改造成"看到什么算什么坏、变坏了做什么"。</p>
+    <div class="tblwrap">
+    <table>
+      <thead><tr><th style="width:22%">指标</th><th style="width:11%">频率</th><th style="width:33%">变坏阈值（可计算）</th><th style="width:34%">变坏后动作</th></tr></thead>
+      <tbody>
+        <tr><td>扣非净利同比</td><td>季</td><td>连续 2 季降幅扩大</td><td>降仓 1/3，并触发逻辑复核</td></tr>
+        <tr><td>归母 vs 扣非背离度</td><td>季</td><td>背离 &gt;15pct 且无一次性原因说明</td><td>标记"利润质量存疑"，禁止加仓</td></tr>
+        <tr><td>科伦博泰药品销售收入</td><td>半年</td><td>环比不增，或增长主要来自一次性收入</td><td>逻辑降级，重估持仓理由</td></tr>
+        <tr><td>融资余额分位</td><td>日</td><td>&gt;90% 分位且近 5 日方向转负</td><td>转入风控观察，禁止加仓</td></tr>
+        <tr><td>资产负债率</td><td>季</td><td>突破 60%</td><td>风控复核</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p><b>新增机制一 · 财报日历。</b>把已知披露日提前入库，在披露前 3 天自动提醒。下一个节点：<b>2026-10-29 三季报</b>。这个机制的价值在于——它把"等财报"从被动等待变成主动排期。</p>
+    <p><b>新增机制二 · 空窗期依据。</b>两次财报之间，持有依据不再来自基本面（因为拿不到新数据），而来自两条可日频观测的替代条件：<b>① 价格结构未破坏（未跌破前低）；② 资金结构未背离（方向未转负）。</b>任一条破坏即进入观察。这样"90 天无信息"不再是决策真空。</p>
+  </div>
+
+  <div class="blk r">
+    <div class="bt">开源支撑</div>
+    <ul>
+      <li><b>ranaroussi/quantstats</b>（7,686★ / Apache-2.0 / 2026-09-27）—— 绩效分析 + HTML 报告。<b>可借鉴</b>：它的报告生成方式可直接复用到你的持仓监控报告；它也是已停更近 3 年的 pyfolio 的现代替代。</li>
+      <li><b>pmorissette/bt</b>（2,996★ / MIT，近 5 周 <b>173 次提交</b>）—— 轻量回测 + <b>组合权重动态调整（rebalance）</b>。<b>可借鉴</b>：它专门处理"按信号调整权重"这个动作，正好对上第五步的"动态调整"，且比 qlib 轻得多——如果只是调权重，不必动用完整量化平台。</li>
+      <li><b>TauricResearch/TradingAgents</b> —— 它的 <b>persistent decision log</b>（v0.2.4 引入）是"持有期决策留痕"的现成实现。<b>可借鉴</b>：把每天的持有理由写进决策日志，等价格变化后回溯，才知道自己当时的判断对不对——这是把"持有"变成可复盘动作的关键。</li>
+      <li><b>fasiondog/hikyuu</b>（3,554★ / Apache-2.0，近 5 周 <b>390 次提交</b>）—— C++ 核心高性能回测。<b>可借鉴</b>：若持仓标的增多导致回测变慢，这是提速方案；代价是 C++ 核心会提高部署与调试门槛。</li>
+    </ul>
+  </div>
+
+  <div class="blk g">
+    <div class="bt">缺口清单</div>
+    <ul>
+      <li><b>四项监控全部没有阈值与动作</b>——本步最大的问题。</li>
+      <li>缺财报日历，三季报 10/29 未进清单。</li>
+      <li>缺空窗期持有依据，导致 90 天决策真空。</li>
+      <li>"持有转风控观察"的触发者未定义（人还是系统）。</li>
+      <li>监控项未覆盖利润质量（只看了归母，没看扣非）。</li>
+    </ul>
+  </div>
+
+  <div class="blk a">
+    <div class="bt">后续行动</div>
+    <ol>
+      <li>把四项监控全部改造成"阈值 + 动作"形式，补入扣非与背离度两项。</li>
+      <li>建立财报日历，第一项排入 2026-10-29 三季报。</li>
+      <li>定义空窗期的两条替代依据，并明确判定者（系统而非人）。</li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <div class="stephead"><div class="no">06</div><div class="ti">复盘迭代 · 闭环收口</div><div class="st">你新增的第六步</div></div>
+  <p class="lead">你说五步法，但第六步是你自己加上的——而且它是让前五步能进化下去的唯一机制。所以把它作为收口，而不是额外的一节。</p>
+
+  <div class="blk">
+    <div class="bt">当前进展</div>
+    <ul>
+      <li>四维复盘设计已定：执行纪律、逻辑验证、情绪偏差、参数优化。</li>
+      <li><b>已经产生了真实的复盘素材：</b>按第四步自己的规则，8/24（42 元保护线）与 9/29（40 元止损条件）两次动作应当触发。</li>
+      <li>数据核对额外暴露了三个参数级问题：45.44 已过期、"38.52 前低"实为 7/1 开盘价、46 倍 PE 实际为 34–36 倍。</li>
+    </ul>
+  </div>
+
+  <div class="blk q">
+    <div class="bt">深入提问</div>
+    <p class="qt">① 你现在面对的第一个复盘问题是：<b>8/24 和 9/29 的两次动作，执行了没有？</b>如果没执行，原因是什么？如果是"看好创新药长线逻辑"——那这个理由在 8 月成立、9 月成立、明年也还会成立。<b>一个永远成立的理由，是不是等于没有理由？</b></p>
+    <p class="qt">② 复盘要能改进系统，前提是参数可调。那么：你的止损宽度、缓冲天数、仓位比例，<b>哪些是"可以调的"，哪些是"不许动的"？</b>如果全都可调，回测一定会过拟合；如果全都不可调，系统永远不进化。</p>
+    <p class="qt">③ 你上一轮说"先把数据纠错，再来搞编写"。这个顺序本身就是一次复盘——<b>你是在哪个瞬间意识到数据可能过期的？</b>把这个判断过程写下来，它就是你的第一条复盘规则。</p>
+  </div>
+
+  <div class="blk s">
+    <div class="bt">落地方案 · 四维评分 + 参数白名单</div>
+    <div class="tblwrap">
+    <table>
+      <thead><tr><th style="width:16%">维度</th><th style="width:42%">计算方式</th><th style="width:42%">触发后的修正动作</th></tr></thead>
+      <tbody>
+        <tr><td><b>纪律分</b></td><td>1 − |实际成交价 − 计划价位| ÷ 计划价位，按权重加总；<b>未执行硬止损直接归零</b></td><td>归零 → 升级为"系统接管下单权限"（把执行权从人手里拿走）</td></tr>
+        <tr><td><b>逻辑分</b></td><td>已验证假设数 ÷ 假设总数（假设来自模板 A5 的"一句话本质"拆解）</td><td>低于阈值 → 优先级高于价格止损，主动降仓</td></tr>
+        <tr><td><b>情绪分</b></td><td>情绪标签与操作方向的一致性（每次手动加减仓时打标签）</td><td>波动大 → 强制降低敞口或暂停交易</td></tr>
+        <tr><td><b>参数分</b></td><td>Walk-Forward 网格搜索，目标函数 = <b>卡玛比率（年化收益 ÷ 最大回撤）</b></td><td>输出新的止损宽度 / 缓冲天数 / 仓位参数</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p><b>参数白名单（防止过拟合的关键）：</b></p>
+    <ul>
+      <li><b>可调参数</b>——止损宽度倍数（ATR 的 N 倍）、缓冲天数、单笔风险预算比例、信号衰减窗口。</li>
+      <li><b>固定约束（不许动）</b>——单笔最大损失上限、单标的最大仓位、总回撤熔断线。</li>
+    </ul>
+    <p>这个划分的意义：<b>可调参数用来适应市场，固定约束用来约束你自己。</b>如果连"单笔最多亏多少"都能在回测里优化，那优化出来的结果一定是最激进的那个。</p>
+    <p><b>新增：纠错日志。</b>记录每次发现数据问题的时点、原因与影响范围。第一轮已经积累了三条（价位过期、前低误判、PE 错误），它们本身就是这个系统最早的真实记录。</p>
+  </div>
+
+  <div class="blk r">
+    <div class="bt">开源支撑</div>
+    <ul>
+      <li><b>microsoft/qlib</b> —— Rolling / Walk-Forward 训练框架 + IC/ICIR 评估，参数寻优的直接工具；也是"因子是否还有效"的定期体检手段（因子拥挤会导致经典因子衰减）。</li>
+      <li><b>TauricResearch/TradingAgents</b> —— decision log 提供"计划"侧数据，你只需补"实际成交"侧，两者对账即得纪律分。这是四维里唯一可以全自动的一维。</li>
+      <li><b>ranaroussi/quantstats</b> —— 不同参数组合的绩效对比与可视化，用于参数寻优后的横向比较。</li>
+      <li><span class="pill bad">生命周期警示</span> <b>hudson-and-thames/mlfinlab</b>（4,935★）—— 曾是金融机器学习最流行的库，<b>协议 NOASSERTION + 最后提交 2023-10-02（停更近 3 年）</b>。<b>教训</b>：热门研究库的生命周期可能比你的项目还短——所以架构上不要把系统绑死在单一研究库上，这也是上一轮建议"抽象 adapter 层"的另一重理由。</li>
+    </ul>
+  </div>
+
+  <div class="blk g">
+    <div class="bt">缺口清单</div>
+    <ul>
+      <li>缺"计划 vs 实际"的对账数据——取决于你是否执行了 8/24 与 9/29 的动作。</li>
+      <li>缺参数白名单，无法区分"该调"与"不该动"。</li>
+      <li>缺寻优目标函数的明确定义（建议卡玛比率）。</li>
+      <li>四维中只有纪律分可全自动，逻辑分与情绪分依赖你的手工输入——这决定了系统的自动化上限。</li>
+    </ul>
+  </div>
+
+  <div class="blk a">
+    <div class="bt">后续行动</div>
+    <ol>
+      <li><b>先回答：8/24 与 9/29 两次动作执行了没有。</b>这是整条链路唯一的前置依赖——不回答它，第四步的参数无从调起，第六步的纪律分也无从计算。</li>
+      <li>确定参数白名单（可调 4 项 / 固定 3 项）。</li>
+      <li>把卡玛比率定为参数寻优的目标函数。</li>
+      <li>启用纠错日志，把已积累的三条数据问题作为首批记录。</li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <h2>七、开源项目汇总与协议警示</h2>
+  <p class="lead">下表只列本轮与上轮实际取数验证过的项目。<b>协议列是选型的硬门槛</b>——技术再好，协议不允许就是不能用。</p>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:24%">项目</th><th style="width:8%">Star</th><th style="width:13%">协议</th><th style="width:9%">最后提交</th><th style="width:46%">对应步骤与可借鉴之处</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">akfamily/akshare</td><td>22,851</td><td><span class="pill ok">MIT</span></td><td>2026-10-07</td><td><b>步1 / 步3</b> · A股/港股/美股基础数据。返回 DataFrame，可直接接筛选与资金面适配</td></tr>
+      <tr><td class="mono">microsoft/qlib</td><td>49,210</td><td><span class="pill ok">MIT</span></td><td>2026-09-16</td><td><b>步1 / 步2 / 步4 / 步6</b> · 因子表达式、IC/ICIR、Walk-Forward、组合优化。官方含 yahoo / us_index 采集器</td></tr>
+      <tr><td class="mono">TauricResearch/TradingAgents</td><td>110,163</td><td><span class="pill ok">Apache-2.0</span></td><td>2026-10-03</td><td><b>步2 / 步5 / 步6</b> · HTML 研报输出、persistent decision log、结构化输出 agent、多 provider（含 DeepSeek/Qwen/GLM）</td></tr>
+      <tr><td class="mono">TA-Lib/ta-lib-python</td><td>12,274</td><td><span class="pill ok">BSD-2</span></td><td>2026-09-21</td><td><b>步2</b> · 技术指标事实标准，速度最优。<b>部署门槛较高</b>（需先装 C 库）</td></tr>
+      <tr><td class="mono">xgboosted/pandas-ta-classic</td><td>449</td><td><span class="pill ok">MIT</span></td><td>2026-10-02</td><td><b>步2</b> · pandas-ta（原库已 404）的社区继任者，纯 Python 零外部依赖，适合作降级备选</td></tr>
+      <tr><td class="mono">skfolio/skfolio</td><td>2,468</td><td><span class="pill ok">BSD-3</span></td><td>2026-10-07</td><td><b>步4</b> · sklearn 风格组合优化，近 5 周 110 次提交，同类中活性最高</td></tr>
+      <tr><td class="mono">dcajasn/Riskfolio-Lib</td><td>4,537</td><td><span class="pill ok">BSD-3</span></td><td>2026-10-04</td><td><b>步4</b> · CVaR / CDaR / EVaR 下行风险度量，可用于定义"单笔最大可承受损失"</td></tr>
+      <tr><td class="mono">pmorissette/bt</td><td>2,996</td><td><span class="pill ok">MIT</span></td><td>2026-10-06</td><td><b>步5</b> · 轻量回测 + 权重动态调整（rebalance），近 5 周 173 次提交</td></tr>
+      <tr><td class="mono">ranaroussi/quantstats</td><td>7,686</td><td><span class="pill ok">Apache-2.0</span></td><td>2026-09-27</td><td><b>步5 / 步6</b> · 绩效分析 + HTML 报告，pyfolio 的现代替代</td></tr>
+      <tr><td class="mono">fasiondog/hikyuu</td><td>3,554</td><td><span class="pill ok">Apache-2.0</span></td><td>2026-10-07</td><td><b>步5</b> · C++ 核心高性能回测，近 5 周 390 次提交。代价是部署与调试门槛</td></tr>
+      <tr><td class="mono">simonlin1212/TradingAgents-astock</td><td>3,640</td><td><span class="pill ok">Apache-2.0</span></td><td>2026-10-07</td><td><b>步3</b> · A股适配版，含龙虎榜/游资/解禁。<b>作者近期在求职，维护连续性存疑</b></td></tr>
+      <tr><td class="mono">electkismet/eltdx</td><td>561</td><td><span class="pill mid">NOASSERTION</span></td><td>2026-10-05</td><td><b>步3</b> · 通达信协议，支持逐笔/快照，可用来自建大单口径。<b>协议需先确认</b></td></tr>
+      <tr><td class="mono">PyPortfolio/PyPortfolioOpt</td><td>6,079</td><td><span class="pill ok">MIT</span></td><td>2026-07-07</td><td><b>步4</b> · 经典有效前沿与 Black-Litterman。<b>近 5 周提交为 0</b>，活性已下降</td></tr>
+      <tr><td class="mono">kernc/backtesting.py</td><td>9,017</td><td><span class="pill bad">AGPL-3.0</span></td><td>2026-08-05</td><td><b>步4</b> · 回测框架。<b>AGPL 比 GPL 更严，通过网络提供服务也需开源</b>，产品化前必须评估</td></tr>
+      <tr><td class="mono">polakowo/vectorbt</td><td>9,292</td><td><span class="pill bad">NOASSERTION</span></td><td>2026-09-26</td><td>向量化回测，性能强但<b>协议字段无法用 SPDX 识别</b>，商用边界不明</td></tr>
+      <tr><td class="mono">oficcejo/aiagents-stock</td><td>1,996</td><td><span class="pill bad">NONE</span></td><td>2026-09-21</td><td>A股多智能体。<b>无任何协议 = 默认保留所有权利</b>，不可直接商用或分发</td></tr>
+      <tr><td class="mono">1nchaos/adata</td><td>5,259</td><td><span class="pill ok">Apache-2.0</span></td><td><b>2025-12-26</b></td><td>A股数据。<b>停更近 10 个月</b>，数据层库停更意味着接口失效只是时间问题</td></tr>
+      <tr><td class="mono">hudson-and-thames/mlfinlab</td><td>4,935</td><td><span class="pill bad">NOASSERTION</span></td><td><b>2023-10-02</b></td><td>金融机器学习。<b>停更近 3 年 + 协议不明</b>，是"热门研究库生命周期可能短于你的项目"的实例</td></tr>
+      <tr><td class="mono">waditu/tushare</td><td>15,449</td><td><span class="pill ok">BSD-3</span></td><td><b>2024-03-13</b></td><td>停更约 2 年 7 个月 + 771 个未关 issue + 数据服务走积分制</td></tr>
+      <tr><td class="mono">twopirllc/pandas-ta</td><td>—</td><td>—</td><td>—</td><td><b>HTTP 404，仓库已不存在。</b>选型必须实时取数、不可依赖记忆的实例</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="bad"><b>协议白名单（建议直接写进你的技术选型规范）：</b><br>
+  <b>可直接引入</b> —— MIT / Apache-2.0 / BSD-2-Clause / BSD-3-Clause。<br>
+  <b>需单独评估</b> —— LGPL-3.0（分发义务）、GPL-3.0 / AGPL-3.0（传染性，AGPL 含网络服务）、NOASSERTION（边界不明）、<b>NONE（无协议 = 默认保留所有权利，最危险）</b>。</div>
+</section>
+
+<footer>
+  <div class="src">
+    事实来源：<br>
+    ① 交易框架数据核对（2026-10-08）——科伦药业 002422.SZ 逐日 K 线、财务报表明细、估值分位、机构预测，经结构化金融数据接口实时取数；<br>
+    ② 选股研报模板库设计（2026-10-08）——三份模板 / 三层指标 / 双市场适配；<br>
+    ③ GitHub 开源选型（2026-10-08）——全部字段经 GitHub REST API v3 实时返回（gh CLI v2.68.1，账号 Martens-100），Star 数、协议 SPDX 标识、最后提交时间、近 5 周提交量、依赖约束均为接口值，未使用记忆值。<br>
+    所有行情与财务数据带时间戳；A 股 2026-10-08 为国庆假期后首个交易日，报告中"当前价"为盘中快照而非收盘价。<br>
+    本报告为方法论推进方案与技术选型评估，不构成对任何标的的推荐或操作建议。文中涉及的具体价位仅用于说明规则设计问题，不代表当前市场状态。开源项目信息以其官方仓库当前状态为准，Star 与活跃度会随时间变化。<br>
+    文中"三维完备度评估"为基于前述核对结果的主观评分，非客观指标，仅用于定位改进优先级。
+  </div>
+  <div>
+    <b>免责声明：</b>以上内容基于公开数据和量化分析，仅供参考，不构成投资建议。市场有风险，投资需谨慎。任何投资决策应结合个人风险承受能力、资金状况和投资目标独立判断，必要时咨询持牌专业机构。过往表现不预示未来收益。
+  </div>
+</footer>
+
+</div>
+
+<script>
+echarts.init(document.getElementById('chartRadar')).setOption({
+  tooltip: { trigger: 'item' },
+  legend: { data: ['规则可量化度', '数据可获取度', '动作可执行度'], bottom: 0, itemWidth: 12, itemHeight: 8, textStyle: { fontSize: 11 } },
+  radar: {
+    indicator: [
+      { name: '第一步 好公司池', max: 5 },
+      { name: '第二步 监控信号', max: 5 },
+      { name: '第三步 资金流验证', max: 5 },
+      { name: '第四步 试仓风控', max: 5 },
+      { name: '第五步 持有调整', max: 5 },
+      { name: '第六步 复盘迭代', max: 5 }
+    ],
+    radius: '62%',
+    center: ['50%', '46%'],
+    axisName: { fontSize: 11, color: '#4a4f5a' },
+    splitArea: { areaStyle: { color: ['#ffffff', '#fafbfc'] } }
+  },
+  series: [{
+    type: 'radar',
+    symbolSize: 5,
+    data: [
+      { name: '规则可量化度', value: [3, 2, 2, 3, 1, 2], lineStyle: { width: 2, color: '#378ADD' }, itemStyle: { color: '#378ADD' }, areaStyle: { color: 'rgba(55,138,221,0.10)' } },
+      { name: '数据可获取度', value: [5, 5, 3, 5, 3, 2], lineStyle: { width: 2, color: '#1D9E75' }, itemStyle: { color: '#1D9E75' }, areaStyle: { color: 'rgba(29,158,117,0.10)' } },
+      { name: '动作可执行度', value: [2, 2, 1, 3, 1, 2], lineStyle: { width: 2, color: '#BA7517' }, itemStyle: { color: '#BA7517' }, areaStyle: { color: 'rgba(186,117,23,0.10)' } }
+    ]
+  }]
+});
+</script>
+</body>
+</html>

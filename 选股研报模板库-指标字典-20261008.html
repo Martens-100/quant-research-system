@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A股 / 美股通用 · 选股研报模板库与指标字典</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+  :root{
+    --ink:#16181d; --ink2:#4a4f5a; --ink3:#828a97;
+    --line:#e3e6ec; --line2:#f0f2f6;
+    --bg:#f6f7f9; --card:#ffffff;
+    --up:#c0392b; --down:#1e8449;
+    --accent:#1f5fa8; --accent-bg:#eef4fb;
+    --warn:#a35b00; --warn-bg:#fdf5e6;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:14px;line-height:1.72;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 24px 64px;}
+  header.top{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:28px 30px;margin-bottom:20px;}
+  header.top h1{margin:0 0 8px;font-size:23px;font-weight:600;letter-spacing:-.2px;}
+  header.top .sub{color:var(--ink2);font-size:13.5px;margin-bottom:14px;}
+  header.top .meta{color:var(--ink3);font-size:12.5px;border-top:1px solid var(--line2);padding-top:12px;}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px;}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;}
+  .kpi .n{font-size:22px;font-weight:600;line-height:1.3;color:var(--accent);}
+  .kpi .l{font-size:12.5px;color:var(--ink3);margin-top:2px;}
+  section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:26px 30px;margin-bottom:20px;}
+  h2{font-size:17px;font-weight:600;margin:0 0 6px;letter-spacing:-.1px;}
+  h2 .tag{font-size:11.5px;font-weight:500;color:var(--accent);background:var(--accent-bg);
+    border-radius:5px;padding:2px 7px;margin-left:8px;vertical-align:2px;}
+  h3{font-size:14.5px;font-weight:600;margin:22px 0 10px;color:var(--ink);}
+  h3:first-of-type{margin-top:14px;}
+  p{margin:8px 0;}
+  .lead{color:var(--ink2);font-size:13.5px;margin-bottom:14px;}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0;}
+  th{background:#fafbfc;color:var(--ink2);font-weight:600;text-align:left;
+    padding:9px 11px;border-bottom:1.5px solid var(--line);font-size:12.5px;white-space:nowrap;}
+  td{padding:9px 11px;border-bottom:1px solid var(--line2);vertical-align:top;}
+  tr:last-child td{border-bottom:none;}
+  td.mono,th.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--accent);}
+  .up{color:var(--up);font-weight:600;}
+  .down{color:var(--down);font-weight:600;}
+  .pill{display:inline-block;font-size:11.5px;padding:1px 7px;border-radius:5px;line-height:1.6;white-space:nowrap;}
+  .pill.auto{background:#eaf5ee;color:#1e6b3f;}
+  .pill.manual{background:#f4f1ea;color:#8a6a1f;}
+  .pill.both{background:var(--accent-bg);color:var(--accent);}
+  .layers{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:14px 0 6px;}
+  .layer{border:1px solid var(--line);border-radius:11px;padding:15px 16px;}
+  .layer.l1{background:#eef4fb;border-color:#c9dcf2;}
+  .layer.l2{background:#f2f7f2;border-color:#cfe3cf;}
+  .layer.l3{background:#fbf5ee;border-color:#eeddc6;}
+  .layer .t{font-weight:600;font-size:13.5px;margin-bottom:4px;}
+  .layer .d{font-size:12.5px;color:var(--ink2);line-height:1.65;}
+  .layer.l1 .t{color:#1f5fa8;}
+  .layer.l2 .t{color:#256b3d;}
+  .layer.l3 .t{color:#9a5b12;}
+  .note{background:var(--accent-bg);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;
+    padding:12px 16px;font-size:13px;color:#1c3d63;margin:14px 0;}
+  .warn{background:var(--warn-bg);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;
+    padding:12px 16px;font-size:13px;color:#6b3d00;margin:14px 0;}
+  .warn b,.note b{font-weight:600;}
+  .charts{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:14px 0;}
+  .chartbox{border:1px solid var(--line);border-radius:11px;padding:14px 14px 6px;}
+  .chartbox .ct{font-size:13px;font-weight:600;margin-bottom:2px;}
+  .chartbox .cs{font-size:11.5px;color:var(--ink3);margin-bottom:8px;line-height:1.5;}
+  .chart{width:100%;height:280px;}
+  .flow{display:flex;align-items:stretch;gap:0;margin:16px 0;flex-wrap:wrap;}
+  .step{flex:1;min-width:120px;border:1px solid var(--line);border-radius:10px;
+    padding:12px 13px;background:#fafbfc;}
+  .step .sn{font-size:11px;color:var(--ink3);font-weight:600;letter-spacing:.4px;}
+  .step .st{font-size:13px;font-weight:600;margin:3px 0 3px;}
+  .step .sd{font-size:11.5px;color:var(--ink2);line-height:1.55;}
+  .arrow{display:flex;align-items:center;padding:0 7px;color:var(--ink3);font-size:15px;}
+  footer{margin-top:8px;padding:20px 30px;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;font-size:12.5px;color:var(--ink2);line-height:1.75;}
+  footer .src{color:var(--ink3);font-size:12px;margin-bottom:10px;}
+  @media(max-width:860px){
+    .kpis{grid-template-columns:repeat(2,1fr);}
+    .layers{grid-template-columns:1fr;}
+    .charts{grid-template-columns:1fr;}
+    .flow{flex-direction:column;}
+    .arrow{transform:rotate(90deg);padding:4px 0;}
+    .wrap{padding:18px 14px 40px;}
+    section{padding:20px 18px;}
+    .tblwrap{overflow-x:auto;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <h1>A股 / 美股通用 · 选股研报模板库与指标字典</h1>
+  <div class="sub">通用层 + 市场适配层双层架构 · 面向自动取数填表设计</div>
+  <div class="meta">版本 v1.0 &nbsp;·&nbsp; 生成日期 2026-10-08 &nbsp;·&nbsp; 覆盖模板：个股深度研报 / 估值定价研报 / 交易计划与复盘迭代研报 &nbsp;·&nbsp; 真实标的验证：002422.SZ、NVDA.US</div>
+</header>
+
+<div class="kpis">
+  <div class="kpi"><div class="n">3</div><div class="l">模板 · 30 个字段组</div></div>
+  <div class="kpi"><div class="n">3</div><div class="l">指标层 · 基本面/技术面/资金面</div></div>
+  <div class="kpi"><div class="n">8</div><div class="l">处 A股 ↔ 美股 硬差异</div></div>
+  <div class="kpi"><div class="n">2</div><div class="l">真实标的取数验证</div></div>
+</div>
+
+<section>
+  <h2>一、架构总原则：为什么不做"一套万能模板"</h2>
+  <p class="lead">把 A 股与美股塞进同一张表，结果必然是对两边都不好用。正确做法是拆成三层——上层同构、中层替换、下层可插拔。</p>
+  <div class="layers">
+    <div class="layer l1">
+      <div class="t">通用层 · 直接迁移</div>
+      <div class="d">基本面结构、估值方法选择、风控与复盘框架。A 股与美股逻辑同构，模板字段一字不改。</div>
+    </div>
+    <div class="layer l2">
+      <div class="t">市场适配层 · 必须替换</div>
+      <div class="d">资金流与情绪指标。A 股用主力资金/两融/北向；美股用 13F/空头持仓/期权流。字段名相同，取数器不同。</div>
+    </div>
+    <div class="layer l3">
+      <div class="t">数据源层 · 可插拔</div>
+      <div class="d">同一字段挂不同数据源。模板结构不动，换市场只换 adapter。</div>
+    </div>
+  </div>
+  <div class="note"><b>判断标准：</b>一个指标若在两地含义相同（如毛利率、ROE），进通用层；若含义或可得性不同（如"主力资金"在美股根本不存在），进适配层。</div>
+</section>
+
+<section>
+  <h2>二、模板 A · 个股深度研报<span class="tag">回答：为什么会有人买它</span></h2>
+  <p class="lead">核心交付不是资料堆砌，而是一句话——<b>"买它本质上是在买 ____"</b>。这句话必须能被某个具体数据推翻，否则它不是投资逻辑，是情绪。</p>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:15%">字段组</th><th style="width:30%">指标 / 内容</th><th style="width:26%">口径与判据</th><th style="width:20%">在选股中的作用</th><th style="width:9%">填充</th></tr></thead>
+    <tbody>
+      <tr><td>A1 公司核心信息</td><td>名称 · 代码 · 市场 · 行业 · 市值 · 主营</td><td>代码需带市场后缀（002422.SZ / NVDA.US）</td><td>身份锚定，防止同名主体混用</td><td><span class="pill auto">自动</span></td></tr>
+      <tr><td>A2 业务结构拆解</td><td>分部收入占比 · 分部增速 · 分部毛利率</td><td>至少拆到"主导业务 / 增长业务 / 衰退业务"三层</td><td>识别哪块业务决定估值，避免用合并报表掩盖结构</td><td><span class="pill auto">自动</span></td></tr>
+      <tr><td>A3 行业格局</td><td>行业阶段 · 行业空间 · 竞争强度 · 公司位置</td><td>导入 / 成长 / 成熟 / 下行；龙头 / 细分龙头 / 追赶者 / 边缘</td><td>决定该给多少估值溢价</td><td><span class="pill manual">手填</span></td></tr>
+      <tr><td>A4 核心投资逻辑</td><td>2–4 条，每条含：逻辑 · 成立理由 · 影响路径 · 是否已定价</td><td>不接受"受益于行业发展"这类泛逻辑</td><td>把叙事压成可验证命题</td><td><span class="pill manual">手填</span></td></tr>
+      <tr><td>A5 一句话本质</td><td>"买它本质上是在买 ____"</td><td>必须可证伪；无法被数据推翻即视为无效</td><td>全篇的收敛点，也是逻辑止损的锚</td><td><span class="pill manual">手填</span></td></tr>
+      <tr><td>A6 增长驱动</td><td>量 / 价 / 份额 / 新业务 / 成本改善</td><td>必须点明"最关键业绩变量"是哪一个</td><td>决定跟踪清单盯什么</td><td><span class="pill both">半自动</span></td></tr>
+      <tr><td>A7 市场共识与预期差</td><td>已定价的共识 · 真正的预期差</td><td>预期差来自：被低估的盈利弹性 / 被高估的短期风险 / 被忽视的新业务 / 周期判断滞后</td><td>超额收益的唯一来源，本模板最高价值字段</td><td><span class="pill manual">手填</span></td></tr>
+      <tr><td>A8 估值框架与位置</td><td>方法选择 · 当前值 · 历史分位 · 同业横向</td><td>见模板 B</td><td>判断"赚业绩钱"还是"赚估值钱"</td><td><span class="pill auto">自动</span></td></tr>
+      <tr><td>A9 风险</td><td>短期风险 · 中期风险分列</td><td>需求 / 价格 / 客户集中 / 产能 / 政策 / 竞争，不写泛风险</td><td>为逻辑止损提供触发条件</td><td><span class="pill manual">手填</span></td></tr>
+      <tr><td>A10 投资结论</td><td>短期视角 · 中期视角</td><td>不预设"买入"，可给"等待 / 审慎"</td><td>对接模板 C 的入场条件</td><td><span class="pill manual">手填</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2>三、模板 B · 估值定价研报<span class="tag">回答：股价里已经装了什么</span></h2>
+  <p class="lead">这一层最容易做错——把 PE 当成"贵贱开关"。它的真正用途是<b>反推市场共识</b>：高 PE 不是卖出信号，而是"市场已把高增长定价进去，你只能赚超预期的钱"。</p>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:15%">字段组</th><th style="width:30%">指标</th><th style="width:26%">口径与判据</th><th style="width:20%">在选股中的作用</th><th style="width:9%">填充</th></tr></thead>
+    <tbody>
+      <tr><td>B1 公司类型判定</td><td>高成长 / 稳健成长 / 周期 / 价值 / 资源 / 平台 / 金融</td><td>类型决定方法，不可混用</td><td>选错类型 = 后续全错</td><td><span class="pill both">半自动</span></td></tr>
+      <tr><td>B2 估值方法选择</td><td>PE / PEG / PB / PS / EV-EBITDA / 分部 / DCF / 股息率</td><td>必须写明"为什么这个方法最适合这家公司"</td><td>避免生搬硬套</td><td><span class="pill manual">手填</span></td></tr>
+      <tr><td>B3 当前估值</td><td>PE(TTM) · PB · PS · PEG · EV · 股息率</td><td>标注 TTM / 静态 / 动态口径</td><td>横向比较的基准</td><td><span class="pill auto">自动</span></td></tr>
+      <tr><td>B4 历史分位</td><td>PE 分位 · PB 分位（3 年 / 10 年）</td><td>&lt;30% 偏低 · 30–70% 中性 · &gt;70% 偏高</td><td>纵向定位。3 年算不准，务必取 10 年</td><td><span class="pill auto">自动</span></td></tr>
+      <tr><td>B5 行业横向</td><td>同业 PE / PB / EV-EBITDA 对照</td><td>跨公司比 PE 前先核对财年口径</td><td>识别"相对贵/相对便宜"</td><td><span class="pill auto">自动</span></td></tr>
+      <tr><td>B6 隐含预期拆解</td><td>高估值隐含什么 · 低估值隐含什么</td><td>高：高增速 / 景气持续 / 市占率提升；低：周期下行 / 业绩见顶 / 治理折价</td><td>本模板最高价值字段</td><td><span class="pill manual">手填</span></td></tr>
+      <tr><td>B7 重估触发</td><td>业绩超预期 / 产业趋势强化 / 商业模式改善 / 风格切换 / 治理改善</td><td>需可观测、可证伪</td><td>上行催化清单</td><td><span class="pill manual">手填</span></td></tr>
+      <tr><td>B8 杀估值触发</td><td>增速下修 / 景气拐点 / 竞争恶化 / 风险偏好下降 / 政策冲击</td><td>需可观测、可证伪</td><td>下行风控清单</td><td><span class="pill manual">手填</span></td></tr>
+      <tr><td>B9 DCF 三情景</td><td>Bear / Base / Bull；WACC 8–12%；永续增长 2–3%</td><td>禁止把单一情景当目标价</td><td>给出估值区间而非点位</td><td><span class="pill both">半自动</span></td></tr>
+      <tr><td>B10 投资判断</td><td>赚业绩钱 vs 赚估值钱</td><td>当前更适合乐观 / 审慎 / 等待</td><td>对接模板 C</td><td><span class="pill manual">手填</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2>四、模板 C · 交易计划与复盘迭代<span class="tag">回答：我到底执行了没有</span></h2>
+  <p class="lead">前两份模板产出"想法"，这一份产出"动作"与"修正"。关键分叉：<b>你没执行计划，是因为计划错了，还是因为你手软了？</b>前者调参数，后者调权限——两者需要完全相反的修正动作。</p>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:15%">字段组</th><th style="width:30%">指标 / 内容</th><th style="width:26%">口径与判据</th><th style="width:20%">在选股中的作用</th><th style="width:9%">填充</th></tr></thead>
+    <tbody>
+      <tr><td>C1 前提声明</td><td>市场环境 · 风险偏好 · 资金量 · 期限</td><td>前提缺失则拒绝给出操作建议</td><td>所有阈值的锚点，无前提的风控是空话</td><td><span class="pill manual">手填</span></td></tr>
+      <tr><td>C2 入场条件</td><td>触发信号 · 当前估值分位 · 左侧/右侧</td><td>左侧潜伏与右侧验证必须显式区分</td><td>杜绝"看着不错就买"</td><td><span class="pill both">半自动</span></td></tr>
+      <tr><td>C3 止损</td><td>技术位止损 · ATR 倍数止损 · 逻辑止损</td><td>ATR 决定宽度，不用整数拍脑袋；逻辑止损优先级高于价格止损</td><td>把最大亏损锁定在开仓前</td><td><span class="pill both">半自动</span></td></tr>
+      <tr><td>C4 止盈</td><td>分批止盈 · 移动止盈</td><td>按估值分位与目标区间分档</td><td>解决"赚过又还回去"</td><td><span class="pill both">半自动</span></td></tr>
+      <tr><td>C5 仓位</td><td>单笔风险敞口 = 总资金 × 风险预算</td><td>由止损宽度反推仓位，而非先定仓位再找止损</td><td>唯一真正控制回撤的字段</td><td><span class="pill both">半自动</span></td></tr>
+      <tr><td>C6 持有期监控</td><td>跟踪指标 + 验证周期</td><td>每项指标写明"何时看、看到什么算变坏"</td><td>把持有变成可执行的观察清单</td><td><span class="pill manual">手填</span></td></tr>
+      <tr><td>C7 复盘 · 纪律</td><td>计划 vs 实际成交 · 偏差归因</td><td>未执行硬止损 → 纪律分归零，触发系统接管</td><td>区分"计划错"与"手软"</td><td><span class="pill auto">自动</span></td></tr>
+      <tr><td>C8 复盘 · 逻辑</td><td>买入假设是否被证伪</td><td>逐条假设给"已验证 / 未验证 / 已证伪"</td><td>逻辑止损的依据</td><td><span class="pill both">半自动</span></td></tr>
+      <tr><td>C9 复盘 · 情绪</td><td>每次手动加减仓时的情绪标签</td><td>贪婪 / 恐惧 / 焦虑 / 不甘 / 从众</td><td>识别情绪是否主导了操作</td><td><span class="pill manual">手填</span></td></tr>
+      <tr><td>C10 复盘 · 参数</td><td>止损/止盈/仓位网格寻优（Walk-Forward）</td><td>目标函数建议用卡玛比率 = 年化收益 / 最大回撤</td><td>把实盘结果变成系统进化的燃料</td><td><span class="pill auto">自动</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>复盘闭环的四个评分规则</h3>
+  <div class="flow">
+    <div class="step"><div class="sn">SCORE 01</div><div class="st">纪律分</div><div class="sd">计划价与实际成交价偏差率加权。未执行硬止损直接归零，并升级为"系统接管下单权限"。</div></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="sn">SCORE 02</div><div class="st">逻辑分</div><div class="sd">已验证假设数 ÷ 假设总数。逻辑分低于阈值时，优先级高于价格止损，主动降仓。</div></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="sn">SCORE 03</div><div class="st">情绪分</div><div class="sd">情绪标签与操作方向的一致性。情绪波动大时强制降低敞口或暂停交易。</div></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="sn">SCORE 04</div><div class="st">参数分</div><div class="sd">Walk-Forward 网格搜索止损/止盈/仓位组合，按卡玛比率排序取最优。</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>五、三层指标矩阵</h2>
+  <p class="lead">同一份模板，指标按三层组织。基本面决定"能不能买"，技术面决定"什么时候买"，资金面决定"谁在买"。</p>
+
+  <h3>基本面层（通用，18 项核心）</h3>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:22%">指标</th><th style="width:30%">口径</th><th style="width:26%">参考判据</th><th style="width:22%">在选股中的作用</th></tr></thead>
+    <tbody>
+      <tr><td>营业收入同比</td><td>单季 / 累计同比，注意区分</td><td>&gt;20% 成长池 · 0–20% 稳健 · &lt;0 困境反转池</td><td>初筛第一道门槛</td></tr>
+      <tr><td>归母净利润同比</td><td>与营收同比同步看</td><td>背离需解释原因</td><td>识别增收不增利</td></tr>
+      <tr><td>毛利率</td><td>连续多期趋势</td><td>连续 3 期不下滑</td><td>定价权与产品结构</td></tr>
+      <tr><td>净利率</td><td>与毛利率同步观察</td><td>两者背离 = 费用失控</td><td>费用管控</td></tr>
+      <tr><td>经营活动现金流净额</td><td>年度 / 累计</td><td>连续为正</td><td>利润真实性</td></tr>
+      <tr><td>经营现金流 / 归母净利</td><td>现金含量</td><td>&gt;0.8 良好</td><td>防"纸面利润"</td></tr>
+      <tr><td>ROE</td><td>加权 / 摊薄，注明口径</td><td>消费龙头常年 &gt;20%</td><td>资本回报水平</td></tr>
+      <tr><td>ROIC</td><td>投入资本回报率</td><td>&gt;WACC + 5pp 为优秀</td><td>区分真护城河与杠杆堆出来的回报</td></tr>
+      <tr><td>资产负债率</td><td>合并口径</td><td>&lt;60% 相对安全</td><td>财务风险</td></tr>
+      <tr><td>有息负债规模</td><td>短期 + 长期借款</td><td>与经营现金流对比</td><td>偿债压力</td></tr>
+      <tr><td>流动比率 / 速动比率</td><td>短期偿债</td><td>&gt;1.5 相对稳健</td><td>流动性风险</td></tr>
+      <tr><td>应收周转 / 存货周转</td><td>次数或天数</td><td>不持续恶化</td><td>增长质量（防压货）</td></tr>
+      <tr><td>商誉 / 净资产</td><td>并购残留</td><td>&lt;10% 减值风险低</td><td>爆雷排查</td></tr>
+      <tr><td>研发费用率</td><td>研发费用 / 营收</td><td>与同业横向比</td><td>成长持续性</td></tr>
+      <tr><td>分部收入结构与增速</td><td>按产品 / 地域拆</td><td>主导业务占比与增速</td><td>估值锚定位</td></tr>
+      <tr><td>客户集中度</td><td>前五大客户占比</td><td>单一客户 &lt;30%</td><td>失速风险</td></tr>
+      <tr><td>自由现金流</td><td>经营现金流 − 资本开支</td><td>长期为正</td><td>分红与回购能力</td></tr>
+      <tr><td>股息率 / 分红率</td><td>TTM 口径</td><td>结合持续性看，不单看单期</td><td>价值型标的的核心</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>技术面层（通用，11 项核心）</h3>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:22%">指标</th><th style="width:30%">口径</th><th style="width:26%">参考判据</th><th style="width:22%">在选股中的作用</th></tr></thead>
+    <tbody>
+      <tr><td>均线排列 MA5/10/20/60/120/250</td><td>前复权</td><td>多头排列 = 短中长趋势一致向上</td><td>趋势判定</td></tr>
+      <tr><td>价格 vs MA250</td><td>年线位置</td><td>年线上方为长期多头</td><td>大级别方向</td></tr>
+      <tr><td>RSI 6 / 12 / 24</td><td>相对强弱</td><td>&gt;70 超买 · &lt;30 超卖</td><td>择时，判断冲高乏力</td></tr>
+      <tr><td>MACD / DIF / DEA</td><td>指数平滑异同</td><td>DIF 上穿 DEA = 金叉；柱状体转正</td><td>动量拐点</td></tr>
+      <tr><td>KDJ</td><td>随机指标</td><td>J &gt; 100 超买 · J &lt; 0 超卖</td><td>短线超买超卖</td></tr>
+      <tr><td>BOLL 上/中/下轨</td><td>20 日 2 倍标准差</td><td>触上轨 / 触下轨</td><td>波动区间与均值回归</td></tr>
+      <tr><td>ATR</td><td>平均真实波幅</td><td>止损宽度 = N × ATR</td><td>风控核心，替代拍脑袋整数止损</td></tr>
+      <tr><td>换手率</td><td>与自身历史分位比</td><td>异常放大 = 分歧加剧</td><td>活跃度与筹码交换</td></tr>
+      <tr><td>量比</td><td>当日 / 近 5 日均量</td><td>&gt;1.5 放量</td><td>异动识别</td></tr>
+      <tr><td>支撑 / 压力位</td><td>前高、前低、密集成交区</td><td>跌破前低 = 结构破坏</td><td>止损与加仓的坐标</td></tr>
+      <tr><td>波动率（60 日年化）</td><td>标准差年化</td><td>波动越高，仓位越小</td><td>仓位反推</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>资金面层（适配，A股 / 美股各 8 项）</h3>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:22%">A 股指标</th><th style="width:28%">含义与判据</th><th style="width:22%">美股对应指标</th><th style="width:28%">含义与判据</th></tr></thead>
+    <tbody>
+      <tr><td>主力资金净流入</td><td>按单笔金额阈值推算的大单净额</td><td>机构持股比例（Institutional Ownership）</td><td>机构合计持股占比及环比变动</td></tr>
+      <tr><td>陆股通 / 北向持股</td><td>外资持股比例与变动</td><td>13F 持仓变动</td><td>季度披露，有滞后，看趋势不看单期</td></tr>
+      <tr><td>融资余额与净买卖</td><td>杠杆资金方向</td><td>空头持仓占流通股（Short Interest）</td><td>做空压力，与拥挤度反向</td></tr>
+      <tr><td>龙虎榜</td><td>席位性质（机构 / 游资）</td><td>期权流（Options Flow）</td><td>大单异常成交方向</td></tr>
+      <tr><td>基金持股比例</td><td>主动偏股基金持仓家数与股数</td><td>看跌看涨比（Put/Call Ratio）</td><td>市场情绪温度计</td></tr>
+      <tr><td>股东户数</td><td>户数下降 = 筹码集中</td><td>内部人交易（Insider Transaction）</td><td>Form 4 披露的管理层买卖</td></tr>
+      <tr><td>大宗交易</td><td>折价率与接盘方</td><td>暗池占比（Dark Pool Ratio）</td><td>机构隐性建仓痕迹</td></tr>
+      <tr><td>板块资金合力</td><td>涨幅 &gt;3% + 涨停 ≥3 只 + 有连板龙头</td><td>板块 ETF 资金流</td><td>行业 ETF 净流入与相对强弱</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2>六、A股 ↔ 美股 八处硬差异</h2>
+  <p class="lead">这些不是"风格差异"，是会直接导致算错数字的口径问题。模板迁移时逐条核对。</p>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:5%">#</th><th style="width:20%">维度</th><th style="width:35%">A 股</th><th style="width:40%">美股</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>财年口径</td><td>自然年，年报 12-31 截止</td><td><b>自定义财年</b>：英伟达 1 月底、苹果 9 月底、微软 6 月底。跨公司比 PE 前必须先映射到自然年季度</td></tr>
+      <tr><td>2</td><td>会计准则</td><td>中国企业会计准则（CAS）</td><td>US GAAP；且市场惯用 <b>Non-GAAP</b>（剔除股权激励等），GAAP 与 Non-GAAP 差距远大于 A 股</td></tr>
+      <tr><td>3</td><td>利润口径</td><td>强调<b>归母净利润</b>（存在少数股东损益）</td><td>多为单一净利润，少数股东权益常为 0</td></tr>
+      <tr><td>4</td><td>资金流概念</td><td>"主力资金"由单笔金额阈值推算，有独立指标</td><td><b>无此概念</b>，须用 13F / 空头持仓 / 期权流替代</td></tr>
+      <tr><td>5</td><td>交易制度</td><td>T+1；涨跌停 ±10%（创业板/科创板 ±20%）</td><td>T+0；无涨跌停（有 LULD 熔断）；可做空</td></tr>
+      <tr><td>6</td><td>情绪指标</td><td>换手率、两融余额、股吧热度</td><td>VIX、Put/Call Ratio、AAII 情绪</td></tr>
+      <tr><td>7</td><td>股东回报</td><td>股息率 + 分红率为主</td><td>股息 + <b>回购收益率</b>（回购规模常远超分红）</td></tr>
+      <tr><td>8</td><td>披露节奏</td><td>强制季报 / 半年报 / 年报，节奏整齐</td><td>10-Q / 10-K / 8-K 事件驱动，另有盘前盘后电话会</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="warn"><b>最易踩的坑：</b>拿美股 FY 标号直接与 A 股自然年季度对齐。英伟达 FY2027 Q2 截止 <b>2026-07-26</b>，对应自然年 2026Q3 前后——标号差近一年。跨市场同期对比一律按"自然年季度"重排，或用 TTM 滚动四季口径。</div>
+</section>
+
+<section>
+  <h2>七、真实数据验证：自动取数是否可行</h2>
+  <p class="lead">以下两组数据为本次实际取数结果，用于验证字段映射可落地。取数通道：金融数据接口（结构化）+ 公开检索。</p>
+
+  <div class="charts">
+    <div class="chartbox">
+      <div class="ct">002422.SZ 科伦药业</div>
+      <div class="cs">报告期累计口径（亿元）· 2026Q1 为单季累计，与半年度/年度累计不可直接连读 · 数据源：结构化财务接口，截至 2026-10-08</div>
+      <div id="chartCN" class="chart"></div>
+    </div>
+    <div class="chartbox">
+      <div class="ct">NVDA.US 英伟达</div>
+      <div class="cs">单季口径（亿美元）· 注意 FY 标号与自然年错位：FY27Q2 截止 2026-07-26 · 数据源：结构化财务接口，截至 2026-10-08</div>
+      <div id="chartUS" class="chart"></div>
+    </div>
+  </div>
+
+  <h3>关键字段取数结果对照</h3>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:24%">字段</th><th style="width:38%">002422.SZ（A 股）</th><th style="width:38%">NVDA.US（美股）</th></tr></thead>
+    <tbody>
+      <tr><td>最新价（盘中）</td><td>39.26 元（2026-10-08 11:28，当日交易中）</td><td>237.47 美元（2026-10-07 收盘，<span class="down">−0.74%</span>）</td></tr>
+      <tr><td>PE(TTM) / 历史分位</td><td>34.15–35.53 倍 / <b>94.2%</b> 分位（两源分歧）</td><td>30.02 倍（接口未返回分位，需补取）</td></tr>
+      <tr><td>PB / 历史分位</td><td>2.64 倍 / 81.9% 分位</td><td>25.04 倍</td></tr>
+      <tr><td>最新报告期毛利率</td><td>47.57%（2026H1）</td><td>74.98%（FY27Q2，GAAP）</td></tr>
+      <tr><td>最新报告期营收同比</td><td>+0.75%（2026H1 医药制造口径）</td><td>+105.85%（FY27Q2）</td></tr>
+      <tr><td>最新报告期归母净利同比</td><td>+12.71%（2026H1）</td><td>+125.90%（FY27Q2）</td></tr>
+      <tr><td>资产负债率</td><td>28.11%（2026H1）</td><td>28.50%（FY27Q2，neodata 口径）</td></tr>
+      <tr><td>技术面（MA 排列）</td><td>价 39.36 &lt; MA10 40.29 &lt; MA20 40.57 &lt; MA60 43.50，位于年线 35.94 上方</td><td>价 237.47 &gt; MA5 236.08 &gt; MA10 231.45 &gt; MA20 225.58 &gt; MA60 217.90，多头排列</td></tr>
+      <tr><td>技术面（RSI / KDJ）</td><td>RSI6 42.61 中性偏弱；KDJ J 23.62 偏超卖</td><td>RSI6 72.80 偏强；KDJ J 78.45 接近超买</td></tr>
+      <tr><td>资金面（适配层）</td><td>基金持股比例 14.89%（较上期 +3.82pct）；主力资金与北向接口本轮限频未取到</td><td>机构评级 96% 买入；回购授权余额约 2,350 亿美元；13F / 空头持仓待补取</td></tr>
+      <tr><td>卖方一致目标价</td><td>52.10 元（29 家机构 2026E 盈利预测）</td><td>334.45 美元（61 家机构）</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="warn">
+    <b>取数可行性结论：</b>基本面与估值字段可全自动填充；技术面字段（均线、RSI、MACD、KDJ、BOLL）接口直接返回，可全自动；资金面 A 股字段存在<b>限频风险</b>，需设计重试与降级；美股 13F / 空头持仓 / 期权流为独立数据源，需单独接入。结论：<b>模板可自动填充，但资金面必须做降级预案</b>。
+  </div>
+</section>
+
+<section>
+  <h2>八、关于你现有框架的数据核对<span class="tag">完整版见独立报告</span></h2>
+  <p class="lead">对照本次实际取数结果，你此前框架中的部分数据已过期，直接影响风控阈值是否需要重设。完整的逐条对账（13 项判定 + 5 项遗漏）见同目录下《科伦药业-数据纠错报告-20261008.html》，此处只摘录最影响结论的两条。</p>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:30%">框架中的表述</th><th style="width:34%">本次实际取数</th><th style="width:36%">影响</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>"当前股价从 38.52 元反弹至 45.44 元""当前价假设 45.44 元（盈亏平衡）"</td>
+        <td>2026-10-08 盘中 <b>39.26 元</b>（取数时 A 股仍在交易中，非收盘价）；9 月中旬曾达 42.48 元后回落</td>
+        <td>若成本确为 45.44 元，则当前为浮亏而非盈亏平衡。<b>40 元止损线已于 9/24–9/29 连续三个交易日收盘跌破，条件成立</b>；当前价距 38 元清仓线仅约 3.3%</td>
+      </tr>
+      <tr>
+        <td>"科伦博泰销售额仅 5.43 亿（占比 3%），无法支撑 46 倍 PE"</td>
+        <td>5.43 亿为科伦博泰 <b>2025 全年</b>药品销售收入；2026H1 药品销售收入已达 6.57 亿元（同比 +112%，占科伦博泰总收入 67.2%），已超 2025 全年水平。科伦药业 PE(TTM) 实为 <b>34.15–35.53 倍</b>（两数据源存在分歧，历史分位 94.2%）</td>
+        <td>"占比 3%"与"46 倍 PE"两个数字均已过期，据此得出的"无法支撑估值"结论需重新推演</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="note"><b>这不是要推翻你的判断，而是提醒一件事：</b>一个把"固定价位"写进规则的系统，必须同时绑定"数据的时效"。45.44 这个锚点一旦过期，后面所有止损止盈档位都会算错。这正是模板 C 里 C1「前提声明」必须记录取数日期的原因。</div>
+</section>
+
+<footer>
+  <div class="src">
+    数据来源：结构化金融数据接口（westock-data / neodata）实时取数，取数时间 2026-10-08 11:24（北京时间）；公开检索内容已标注媒体来源。所有行情、财务与估值数据均带时间戳，引用前请核对统计周期与披露口径。<br>
+    本文档为模板与指标的方法论设计稿，不构成对任何标的的推荐。文中出现的具体标的仅用于验证字段映射的可取数性。
+  </div>
+  <div>
+    <b>免责声明：</b>以上内容基于公开数据和量化分析，仅供参考，不构成投资建议。市场有风险，投资需谨慎。任何投资决策应结合个人风险承受能力、资金状况和投资目标独立判断，必要时咨询持牌专业机构。过往表现不预示未来收益。
+  </div>
+</footer>
+
+</div>
+
+<script>
+echarts.init(document.getElementById('chartCN')).setOption({
+  tooltip: { trigger: 'axis' },
+  legend: { data: ['营业收入', '归母净利润'], bottom: 0, itemWidth: 12, itemHeight: 8, textStyle: { fontSize: 11 } },
+  grid: { left: 52, right: 52, top: 22, bottom: 42 },
+  xAxis: { type: 'category', data: ['2025H1', '2025Q3', '2025FY', '2026Q1', '2026H1'], axisLabel: { fontSize: 10.5 } },
+  yAxis: [
+    { type: 'value', name: '营收(亿)', nameTextStyle: { fontSize: 10.5 }, axisLabel: { fontSize: 10.5 } },
+    { type: 'value', name: '净利(亿)', nameTextStyle: { fontSize: 10.5 }, axisLabel: { fontSize: 10.5 } }
+  ],
+  series: [
+    { name: '营业收入', type: 'bar', barWidth: 20, itemStyle: { color: '#378ADD', borderRadius: [3, 3, 0, 0] }, data: [90.83, 132.77, 185.13, 42.59, 88.39] },
+    { name: '归母净利润', type: 'line', yAxisIndex: 1, symbolSize: 6, lineStyle: { width: 2, color: '#BA7517' }, itemStyle: { color: '#BA7517' }, data: [10.01, 12.01, 17.02, 4.54, 11.28] }
+  ]
+});
+
+echarts.init(document.getElementById('chartUS')).setOption({
+  tooltip: { trigger: 'axis' },
+  legend: { data: ['营业收入', '净利润'], bottom: 0, itemWidth: 12, itemHeight: 8, textStyle: { fontSize: 11 } },
+  grid: { left: 58, right: 58, top: 22, bottom: 42 },
+  xAxis: { type: 'category', data: ['FY26Q3', 'FY26Q4', 'FY27Q1', 'FY27Q2'], axisLabel: { fontSize: 10.5 } },
+  yAxis: [
+    { type: 'value', name: '营收(亿$)', nameTextStyle: { fontSize: 10.5 }, axisLabel: { fontSize: 10.5 } },
+    { type: 'value', name: '净利(亿$)', nameTextStyle: { fontSize: 10.5 }, axisLabel: { fontSize: 10.5 } }
+  ],
+  series: [
+    { name: '营业收入', type: 'bar', barWidth: 22, itemStyle: { color: '#1D9E75', borderRadius: [3, 3, 0, 0] }, data: [570.06, 681.27, 816.15, 962.21] },
+    { name: '净利润', type: 'line', yAxisIndex: 1, symbolSize: 6, lineStyle: { width: 2, color: '#534AB7' }, itemStyle: { color: '#534AB7' }, data: [319.10, 429.60, 583.21, 596.88] }
+  ]
+});
+</script>
+</body>
+</html>

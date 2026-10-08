@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>数据纠错报告 · 科伦药业（002422.SZ）交易框架对账</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+  :root{
+    --ink:#16181d; --ink2:#4a4f5a; --ink3:#828a97;
+    --line:#e3e6ec; --line2:#f0f2f6;
+    --bg:#f6f7f9; --card:#ffffff;
+    --up:#c0392b; --down:#1e8449;
+    --accent:#1f5fa8; --accent-bg:#eef4fb;
+    --warn:#a35b00; --warn-bg:#fdf5e6;
+    --bad:#a3272b; --bad-bg:#fdeeee;
+    --ok:#1e6b3f; --ok-bg:#eaf5ee;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:14px;line-height:1.72;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 24px 64px;}
+  header.top{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:28px 30px;margin-bottom:20px;}
+  header.top h1{margin:0 0 8px;font-size:23px;font-weight:600;letter-spacing:-.2px;}
+  header.top .sub{color:var(--ink2);font-size:13.5px;margin-bottom:14px;}
+  header.top .meta{color:var(--ink3);font-size:12.5px;border-top:1px solid var(--line2);padding-top:12px;}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px;}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;}
+  .kpi .n{font-size:22px;font-weight:600;line-height:1.3;}
+  .kpi .l{font-size:12.5px;color:var(--ink3);margin-top:2px;}
+  .kpi.ok .n{color:var(--ok);} .kpi.stale .n{color:var(--warn);}
+  .kpi.bad .n{color:var(--bad);} .kpi.miss .n{color:var(--accent);}
+  section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:26px 30px;margin-bottom:20px;}
+  h2{font-size:17px;font-weight:600;margin:0 0 6px;letter-spacing:-.1px;}
+  h2 .tag{font-size:11.5px;font-weight:500;color:var(--accent);background:var(--accent-bg);
+    border-radius:5px;padding:2px 7px;margin-left:8px;vertical-align:2px;}
+  h3{font-size:14.5px;font-weight:600;margin:22px 0 10px;}
+  h3:first-of-type{margin-top:14px;}
+  p{margin:8px 0;}
+  .lead{color:var(--ink2);font-size:13.5px;margin-bottom:14px;}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0;}
+  th{background:#fafbfc;color:var(--ink2);font-weight:600;text-align:left;
+    padding:9px 11px;border-bottom:1.5px solid var(--line);font-size:12.5px;white-space:nowrap;}
+  td{padding:9px 11px;border-bottom:1px solid var(--line2);vertical-align:top;}
+  tr:last-child td{border-bottom:none;}
+  .up{color:var(--up);font-weight:600;}
+  .down{color:var(--down);font-weight:600;}
+  .v{font-weight:600;}
+  .pill{display:inline-block;font-size:11.5px;padding:1px 7px;border-radius:5px;line-height:1.6;white-space:nowrap;}
+  .pill.ok{background:var(--ok-bg);color:var(--ok);}
+  .pill.stale{background:var(--warn-bg);color:var(--warn);}
+  .pill.bad{background:var(--bad-bg);color:var(--bad);}
+  .pill.miss{background:var(--accent-bg);color:var(--accent);}
+  .note{background:var(--accent-bg);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;
+    padding:12px 16px;font-size:13px;color:#1c3d63;margin:14px 0;}
+  .warn{background:var(--warn-bg);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;
+    padding:12px 16px;font-size:13px;color:#6b3d00;margin:14px 0;}
+  .bad{background:var(--bad-bg);border-left:3px solid var(--bad);border-radius:0 8px 8px 0;
+    padding:12px 16px;font-size:13px;color:#6d1a1d;margin:14px 0;}
+  .note b,.warn b,.bad b{font-weight:600;}
+  .chartbox{border:1px solid var(--line);border-radius:11px;padding:14px 14px 6px;margin:14px 0;}
+  .chartbox .ct{font-size:13px;font-weight:600;margin-bottom:2px;}
+  .chartbox .cs{font-size:11.5px;color:var(--ink3);margin-bottom:8px;line-height:1.5;}
+  .chart{width:100%;height:340px;}
+  footer{margin-top:8px;padding:20px 30px;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;font-size:12.5px;color:var(--ink2);line-height:1.75;}
+  footer .src{color:var(--ink3);font-size:12px;margin-bottom:10px;}
+  @media(max-width:860px){
+    .kpis{grid-template-columns:repeat(2,1fr);}
+    .wrap{padding:18px 14px 40px;}
+    section{padding:20px 18px;}
+    .tblwrap{overflow-x:auto;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <h1>数据纠错报告 · 科伦药业（002422.SZ）交易框架对账</h1>
+  <div class="sub">逐条核对既有交易框架中的价格、财务与估值数据，标注判定、来源与时点</div>
+  <div class="meta">生成日期 2026-10-08 &nbsp;·&nbsp; 取数时点 2026-10-08 11:24–11:28（北京时间，A 股当日仍在交易中）&nbsp;·&nbsp; 数据源：结构化金融数据接口（行情 / K 线 / 财务 / 估值 / 机构预测）+ 公司公告与公开检索</div>
+</header>
+
+<div class="kpis">
+  <div class="kpi ok"><div class="n">5</div><div class="l">核对正确</div></div>
+  <div class="kpi stale"><div class="n">3</div><div class="l">数据过期</div></div>
+  <div class="kpi bad"><div class="n">2</div><div class="l">数值 / 锚点错误</div></div>
+  <div class="kpi miss"><div class="n">5</div><div class="l">重大遗漏</div></div>
+</div>
+
+<section>
+  <h2>一、最要紧的一条：按框架自己的规则，减半动作早就该执行了</h2>
+  <p class="lead">先不看数字对错，只看框架自设的条件——它已经被触发过，而且不止一次。</p>
+
+  <div class="bad">
+    <b>条件触发复盘（依据逐日收盘价，前复权）：</b><br>
+    · <b>42 元保护线</b>（浮亏约 7% 自动减半）：<b>2026-08-24</b> 首次跌破（收 41.44），此后 8/28、8/31 及 9 月多日持续低于 42 元。<br>
+    · <b>40 元止损线</b>（跌破且 3 日未收回触发减半）：9/11 首次跌破（收 39.35）→ 9/14 收回 41.38，属假跌破；9/18 再破（收 39.77）→ 9/21 收回 42.48，第二次假跌破；<b>9/24（38.86）、9/28（38.60）、9/29（39.22）连续三个交易日收盘低于 40 元 → 条件于 9/29 收盘正式成立</b>。<br>
+    · 当前价 39.26 元，距框架设定的 38 元清仓线仅 <b>3.3%</b>。
+  </div>
+
+  <div class="warn"><b>这意味着什么：</b>如果这套框架真的被当作规则在执行，那么 8 月下旬就该减过一次，9 月 29 日收盘就该再减一次。现在需要确认的不是"要不要止损"，而是<b>这两次动作实际执行了没有</b>——这恰好是框架第六步"执行纪律复盘"要回答的第一个问题，只不过它现在要回答的是一道已经过了时效的题。</div>
+
+  <div class="chartbox">
+    <div class="ct">2026-07-01 至 2026-10-08 收盘价路径与三条框架线</div>
+    <div class="cs">前复权收盘价（元）。45.44 = 框架标注的买入成本（2026-08-07 收盘）；42.00 = 保护线；40.00 = 止损线。9/25 为中秋假期休市，10/01–10/07 国庆休市，故图中无对应点。数据源：逐日 K 线接口，截至 2026-10-08 盘中。</div>
+    <div id="chartPath" class="chart"></div>
+  </div>
+</section>
+
+<section>
+  <h2>二、逐条对账表</h2>
+  <p class="lead">判定口径：<span class="pill ok">正确</span> 数据与口径均无误；<span class="pill stale">过期</span> 数字曾正确但已不反映当前状态；<span class="pill bad">错误</span> 数值或锚点本身有误；<span class="pill miss">遗漏</span> 框架未提及但影响结论的关键项。</p>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:4%">#</th><th style="width:26%">框架中的表述</th><th style="width:44%">实际数据（含来源与时点）</th><th style="width:10%">判定</th><th style="width:16%">影响</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>1</td><td>2025 年营收 −15.13%</td>
+        <td>2025 财年营业收入 <span class="v">185.13 亿元</span>，同比 <span class="v">−15.13%</span>（来源：结构化财务接口，披露日 2026-04-03）</td>
+        <td><span class="pill ok">正确</span></td><td>—</td>
+      </tr>
+      <tr>
+        <td>2</td><td>2025 年归母净利 −42.03%</td>
+        <td>2025 财年归母净利润 <span class="v">17.02 亿元</span>，同比 <span class="v">−42.03%</span>（同上，披露日 2026-04-03）</td>
+        <td><span class="pill ok">正确</span></td><td>—</td>
+      </tr>
+      <tr>
+        <td>3</td><td>7 月 17 日跌停</td>
+        <td>2026-07-17 收 <span class="v">44.91 元</span>，<span class="down">−10.00%</span> 跌停封板。当日为全市场系统性杀跌（创业板跌近 5%），叠加 7/16 折价 8% 大宗交易（来源：K 线接口 + 公开检索）</td>
+        <td><span class="pill ok">正确</span></td><td>—</td>
+      </tr>
+      <tr>
+        <td>4</td><td>8 月 7 日大涨 6.89%（成交额 20.18 亿，换手率 3.49%）</td>
+        <td>2026-08-07 收 <span class="v">45.44 元</span>，<span class="up">+6.89%</span>，成交额 <span class="v">20.18 亿元</span>，换手率 <span class="v">3.49%</span> —— 三项数字逐一对上（来源：K 线接口）</td>
+        <td><span class="pill ok">正确</span></td><td>—</td>
+      </tr>
+      <tr>
+        <td>5</td><td>"当前股价从 38.52 元反弹至 45.44 元（涨幅约 18%）"</td>
+        <td><b>两个数字各自正确，但拼在一起是错的。</b>38.52 是 <b>2026-07-01 的开盘价</b>（即 6/30 收盘价）；45.44 是 <b>2026-08-07 的收盘价</b>。两者相隔 27 个交易日，中间路径是：7/06 盘中最高 <span class="v">52.78</span> → 7/17 跌停 44.91 → 7/23 收 51.35 → 7/24 <span class="down">−9.15%</span> 收 46.65。<b>这不是一次反弹，是两个不相关时点的拼接。</b></td>
+        <td><span class="pill bad">错误</span></td>
+        <td>据此得出的"涨幅约 18%"不成立，并会误导对成本位置的判断</td>
+      </tr>
+      <tr>
+        <td>6</td><td>"当前价：假设 45.44 元（盈亏平衡）"</td>
+        <td>2026-10-08 盘中 <span class="v">39.26 元</span>（11:28 取数，当日仍交易中）。若成本确为 45.44 元，则为浮亏约 <b>13.6%</b>，而非盈亏平衡。另：9 月中旬曾反弹至 42.48 元（9/21），此后回落</td>
+        <td><span class="pill stale">过期</span></td>
+        <td>成本位置判断反转，风控优先级完全不同</td>
+      </tr>
+      <tr>
+        <td>7</td><td>科伦博泰销售额仅 5.43 亿（占比 3%）</td>
+        <td>5.43 亿元 = 科伦博泰 <b>2025 全年</b>药品销售收入（当年总收入约 20.58 亿元）。<b>2026H1 药品销售收入已达 6.57 亿元，同比 +112%，占科伦博泰总收入 67.2%，已超过 2025 全年水平</b>（来源：科伦博泰 2026 中期业绩公告，披露日 2026-08-17）</td>
+        <td><span class="pill stale">过期</span></td>
+        <td>用 2025 静态数据否定 2026 估值逻辑，结论方向可能相反</td>
+      </tr>
+      <tr>
+        <td>8</td><td>"46 倍 PE，无法支撑"</td>
+        <td>科伦药业 PE(TTM) 实际为 <span class="v">34.15 倍</span>（行情接口，2026-10-08 盘中）；估值接口同日给出 <span class="v">35.53 倍</span>、历史分位 <b>94.2%</b>。两源存在约 4% 分歧，需以公司公告口径复核</td>
+        <td><span class="pill bad">错误</span></td>
+        <td>数值错误；但"分位 94.2% 偏高"这一方向性判断成立</td>
+      </tr>
+      <tr>
+        <td>9</td><td>"前低 38.52 元"（建议改为跌破前低止损）</td>
+        <td><b>38.52 不是前低</b>，是 7/1 开盘价。7 月区间低点为 <span class="v">36.92 元</span>（7/1 盘中）；9 月低点为 <span class="v">38.42 元</span>（9/29 盘中）。当前价 39.26 距 38.42 仅 2.1%</td>
+        <td><span class="pill bad">错误</span></td>
+        <td>止损锚点定错，会得到错误的宽度</td>
+      </tr>
+      <tr>
+        <td>10</td><td>2026 年半年报（8 月下旬）</td>
+        <td>实际披露日 <span class="v">2026-08-27</span>（来源：结构化财务接口披露日字段）。另：<b>三季报预约披露日为 2026-10-29</b>，是更近的下一个节点</td>
+        <td><span class="pill ok">正确</span></td><td>但遗漏了三季报这个更近的催化</td>
+      </tr>
+      <tr>
+        <td>11</td><td>川宁生物：抗生素价格回暖？合成生物放量？</td>
+        <td>川宁生物代码 <span class="v">301301.SZ</span> 正确。抗生素中间体仍处周期底部；合成生物学（麦角硫因、红没药醇）已落地产业化，Q2 经营数据显现筑底企稳（来源：公开检索，需核实原文）</td>
+        <td><span class="pill ok">正确</span></td><td>方向正确，但"放量"目前仍是"落地初期"</td>
+      </tr>
+      <tr>
+        <td>12</td><td>股东户数 / 融资余额：筹码是否集中？融资是否大幅流出？</td>
+        <td>8/19 融资余额 <span class="v">8.94 亿元</span>，占流通市值 1.25%，<b>超过近一年 80% 分位（高位）</b>；9/29 融资净卖出 143 万元、9/30 净卖出 2932 万元（来源：公开检索 + 新闻，需核实原文）</td>
+        <td><span class="pill stale">过期</span></td>
+        <td>遗漏了"融资余额已在高位"这一更重要的拥挤度信号</td>
+      </tr>
+      <tr>
+        <td>13</td><td>—（框架未提机构持仓）</td>
+        <td>基金持股比例 <span class="v">14.89%</span>，较上期 <span class="up">+3.82pct</span>；主动偏股基金 <span class="v">122 家</span>（较上期 +46 家），持股 1.934 亿股（+4877 万股）。近 6 个月机构评级买入/增持占比 100%（来源：机构预测接口，2026-10-08）</td>
+        <td><span class="pill miss">遗漏</span></td>
+        <td>机构在增配，与"资金合力不足"的定性判断需要重新权衡</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2>三、五处重大遗漏<span class="tag">比数字错误更影响结论</span></h2>
+  <p class="lead">数字错了是算错，漏了关键指标是看错。以下五项框架完全没写，但每一项都能单独改变结论。</p>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:5%">#</th><th style="width:24%">遗漏项</th><th style="width:44%">实际数据</th><th style="width:27%">为什么它比框架里写的更重要</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>1</td><td><b>扣非净利润</b></td>
+        <td>2026H1 归母净利 11.28 亿元（<span class="up">+12.71%</span>），但 <b>扣非净利润仅 6.99 亿元，同比 −29.03%</b>（来源：公开检索，需核实原文）</td>
+        <td>框架的验证条件是"营收是否转正？毛利率是否止跌？"——这两条会得出"已改善"。但扣非口径显示主营盈利仍在下滑，利润增长含非经常性收益。<b>只看归母净利会误判为基本面反转</b></td>
+      </tr>
+      <tr>
+        <td>2</td><td><b>科伦博泰的利润质量</b></td>
+        <td>2026H1 利润 3.88 亿元中，含 <b>7.03 亿元一次性和解收入</b>（宜联生物，其中约 6.03 亿元为 YL201 对外授权分成）及 <b>1.40 亿元预扣税退税</b>。同期销售费用同比 +118.3%、研发开支 7.68 亿元（来源：科伦博泰 2026 中期业绩公告，2026-08-17）</td>
+        <td>框架把"科伦博泰扭亏"当作逻辑验证点。但扭亏主要来自一次性收入，剔除后内生经营仍在投入期。<b>这是"逻辑是否被证伪"的关键分水岭</b></td>
+      </tr>
+      <tr>
+        <td>3</td><td><b>三季报披露日</b></td>
+        <td>预约披露日 <span class="v">2026-10-29</span>（来源：公开检索，需核实原文）</td>
+        <td>框架只盯"8 月下旬半年报"。半年报已披露完毕，下一个可验证节点在 10/29，距当前仅 3 周。<b>风控决策的时间窗口完全不同</b></td>
+      </tr>
+      <tr>
+        <td>4</td><td><b>融资余额的绝对位置</b></td>
+        <td>8/19 融资余额 8.94 亿元，占流通市值 1.25%，<b>超过近一年 80% 分位</b></td>
+        <td>框架只问"融资是否大幅流出"，是问方向。但"已在 80% 分位高位"是问<b>水位</b>——高位意味着一旦去杠杆，下跌会被放大。方向与水位是两个问题</td>
+      </tr>
+      <tr>
+        <td>5</td><td><b>估值分位而非绝对 PE</b></td>
+        <td>PE(TTM) 34.15–35.53 倍，<b>历史分位 94.2%</b>；PB 2.54–2.64 倍，分位 81.9%（来源：估值接口，2026-10-08）</td>
+        <td>框架纠结"46 倍 PE 贵不贵"，方向错了。真正的信息是<b>分位 94.2%</b>——绝对 PE 高低要结合增速看，分位才直接说明"市场已定价到什么程度"</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2>四、无法核对的部分</h2>
+  <p class="lead">以下数据属于你的个人持仓与操作记录，外部数据源无法验证，需要你自己确认。</p>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:26%">项目</th><th style="width:74%">说明</th></tr></thead>
+    <tbody>
+      <tr><td>买入成本 45.44 元</td><td>与 2026-08-07 收盘价完全一致，说明该价位大概率来自当日成交。需你确认实际成交均价与成交日</td></tr>
+      <tr><td>持仓数量（框架假设 1 万股）</td><td>框架中标注为"假设"，需替换为实际持仓</td></tr>
+      <tr><td>40 元止损 / 42 元减半是否实际执行</td><td>这是本报告最关键的一处未知。9/29 收盘条件已成立，执行与否决定后续所有参数怎么调</td></tr>
+      <tr><td>资金规模与单笔最大回撤容忍度</td><td>仓位上限必须有这个锚点。框架里"8%–12% 卫星仓位"缺少对应的总资金基数与回撤预算</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2>五、这次纠错对模板设计的直接后果</h2>
+  <p class="lead">三个可落地的设计约束——都是从这次对账里长出来的，不是凭空加的。</p>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:22%">约束</th><th style="width:38%">规则</th><th style="width:40%">针对这次发现的哪个问题</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>价格字段必须带取数时间戳</td>
+        <td>任何进入规则的价位，必须同时记录"数值 + 取数日期 + 盘中/收盘状态"</td>
+        <td>本次 10-08 取数时 A 股仍在交易中，两个时点相差 4 分钟就得到 39.36 与 39.26 两个值。不标状态就会把盘中价当收盘价用</td>
+      </tr>
+      <tr>
+        <td>区间数据禁止跨时点拼接</td>
+        <td>表述涨跌幅时，起点与终点必须来自同一序列、同一口径，且写明区间起止日</td>
+        <td>"38.52 → 45.44（+18%）"正是跨时点拼接的产物，掩盖了中间 −12.6% 的最大回撤</td>
+      </tr>
+      <tr>
+        <td>利润指标强制双口径</td>
+        <td>归母净利润与扣非净利润必须同时列出，两者背离超过 15pct 时强制标注原因</td>
+        <td>2026H1 归母 +12.71% vs 扣非 −29.03%，背离 41.7pct。单口径会直接得出相反的结论</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="note"><b>回收一句话：</b>你之前说"先把数据纠错，再来搞编写"——顺序是对的。因为模板里的风控字段是<b>函数</b>，价位是<b>参数</b>。参数过期，函数再正确也算不出对的结果。这次的 45.44、38.52、46 倍 PE、5.43 亿占比，全都是参数问题。</div>
+</section>
+
+<footer>
+  <div class="src">
+    数据来源：结构化金融数据接口（逐日 K 线、行情快照、财务报表明细、估值分位、机构盈利预测与评级）与公司公开公告；标注"需核实原文"者为公开检索所得，属非一手来源。<br>
+    取数时点 2026-10-08 11:24–11:28（北京时间）。A 股当日为国庆假期后首个交易日且仍在交易中，报告中"当前价"均为盘中快照而非收盘价；9/25 中秋假期、10/01–10/07 国庆假期休市。财务数据为合并报表口径，货币单位人民币；PE/PB 为 TTM 口径，不同数据源存在分歧处已并列标注。<br>
+    本报告为数据核对与方法论校验，不构成对任何标的的推荐或操作建议。文中涉及的具体价位仅用于核对既有框架的数据准确性。
+  </div>
+  <div>
+    <b>免责声明：</b>以上内容基于公开数据和量化分析，仅供参考，不构成投资建议。市场有风险，投资需谨慎。任何投资决策应结合个人风险承受能力、资金状况和投资目标独立判断，必要时咨询持牌专业机构。过往表现不预示未来收益。
+  </div>
+</footer>
+
+</div>
+
+<script>
+var pathDates = ['07-01','07-02','07-03','07-06','07-07','07-08','07-09','07-10','07-13','07-14','07-15','07-16','07-17','07-20','07-21','07-22','07-23','07-24','07-27','07-28','07-29','07-30','07-31','08-03','08-04','08-05','08-06','08-07','08-10','08-11','08-12','08-13','08-14','08-17','08-18','08-19','08-20','08-21','08-24','08-25','08-26','08-27','08-28','08-31','09-01','09-02','09-03','09-04','09-07','09-08','09-09','09-10','09-11','09-14','09-15','09-16','09-17','09-18','09-21','09-22','09-23','09-24','09-28','09-29','09-30','10-08'];
+var pathClose = [41.95,44.75,47.98,47.73,43.61,41.98,42.70,44.07,44.80,48.50,49.07,49.90,44.91,47.80,47.36,49.22,51.35,46.65,47.51,45.21,43.04,42.79,43.44,41.33,42.29,42.90,42.51,45.44,46.41,46.42,46.91,46.30,45.11,46.69,46.26,44.97,47.15,44.87,41.44,42.57,43.64,42.28,41.75,40.58,40.83,41.75,41.82,41.92,41.54,40.76,40.37,40.14,39.35,41.38,40.65,40.52,40.02,39.77,42.48,42.00,41.70,38.86,38.60,39.22,40.85,39.26];
+
+echarts.init(document.getElementById('chartPath')).setOption({
+  tooltip: { trigger: 'axis', valueFormatter: function (v) { return v + ' 元'; } },
+  grid: { left: 56, right: 30, top: 30, bottom: 46 },
+  xAxis: { type: 'category', data: pathDates, axisLabel: { fontSize: 10, interval: 4 }, boundaryGap: false },
+  yAxis: { type: 'value', min: 36, max: 54, name: '收盘价(元)', nameTextStyle: { fontSize: 10.5 }, axisLabel: { fontSize: 10.5 } },
+  series: [{
+    name: '收盘价', type: 'line', smooth: false, symbol: 'none',
+    lineStyle: { width: 1.8, color: '#1f5fa8' },
+    areaStyle: { color: 'rgba(31,95,168,0.07)' },
+    data: pathClose,
+    markLine: {
+      symbol: 'none', silent: true,
+      label: { fontSize: 10.5, position: 'insideEndTop' },
+      data: [
+        { yAxis: 45.44, name: '买入成本', lineStyle: { color: '#5F5E5A', type: 'dashed', width: 1 }, label: { formatter: '买入成本 45.44' } },
+        { yAxis: 42, name: '保护线', lineStyle: { color: '#BA7517', type: 'dashed', width: 1 }, label: { formatter: '保护线 42.00' } },
+        { yAxis: 40, name: '止损线', lineStyle: { color: '#A32D2D', type: 'dashed', width: 1 }, label: { formatter: '止损线 40.00' } }
+      ]
+    }
+  }]
+});
+</script>
+</body>
+</html>

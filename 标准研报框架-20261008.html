@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>标准研报框架 v1.0 · 结构规范与三类内容应用</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+  :root{
+    --ink:#16181d; --ink2:#4a4f5a; --ink3:#828a97;
+    --line:#e3e6ec; --line2:#f0f2f6;
+    --bg:#f6f7f9; --card:#ffffff;
+    --accent:#1f5fa8; --accent-bg:#eef4fb;
+    --warn:#a35b00; --warn-bg:#fdf5e6;
+    --bad:#a3272b; --bad-bg:#fdeeee;
+    --ok:#1e6b3f; --ok-bg:#eaf5ee;
+    --purple:#534AB7; --purple-bg:#efedfb;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:14px;line-height:1.72;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1100px;margin:0 auto;padding:32px 24px 64px;}
+  header.top{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:28px 30px;margin-bottom:20px;}
+  header.top h1{margin:0 0 8px;font-size:23px;font-weight:600;letter-spacing:-.2px;}
+  header.top .sub{color:var(--ink2);font-size:13.5px;margin-bottom:14px;}
+  header.top .meta{color:var(--ink3);font-size:12.5px;border-top:1px solid var(--line2);padding-top:12px;}
+  section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:26px 30px;margin-bottom:20px;}
+  h2{font-size:17px;font-weight:600;margin:0 0 6px;letter-spacing:-.1px;}
+  h2 .tag{font-size:11.5px;font-weight:500;color:var(--accent);background:var(--accent-bg);
+    border-radius:5px;padding:2px 7px;margin-left:8px;vertical-align:2px;}
+  h3{font-size:14.5px;font-weight:600;margin:22px 0 10px;}
+  h3:first-of-type{margin-top:14px;}
+  p{margin:8px 0;}
+  .lead{color:var(--ink2);font-size:13.5px;margin-bottom:14px;}
+  ul,ol{margin:8px 0;padding-left:22px;}
+  li{margin:5px 0;}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0;}
+  th{background:#fafbfc;color:var(--ink2);font-weight:600;text-align:left;
+    padding:9px 11px;border-bottom:1.5px solid var(--line);font-size:12.5px;white-space:nowrap;}
+  td{padding:9px 11px;border-bottom:1px solid var(--line2);vertical-align:top;}
+  tr:last-child td{border-bottom:none;}
+  td.mono,th.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;}
+  .v{font-weight:600;}
+  .pill{display:inline-block;font-size:11.5px;padding:1px 7px;border-radius:5px;line-height:1.6;white-space:nowrap;}
+  .pill.req{background:var(--bad-bg);color:var(--bad);}
+  .pill.core{background:var(--ok-bg);color:var(--ok);}
+  .pill.opt{background:#f1f0ea;color:#5F5E5A;}
+  .pill.cond{background:var(--warn-bg);color:var(--warn);}
+  .pill.na{background:#f6f7f9;color:var(--ink3);}
+  .pill.new{background:var(--purple-bg);color:var(--purple);}
+  .note{background:var(--accent-bg);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;
+    padding:12px 16px;font-size:13px;color:#1c3d63;margin:14px 0;}
+  .warn{background:var(--warn-bg);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;
+    padding:12px 16px;font-size:13px;color:#6b3d00;margin:14px 0;}
+  .bad{background:var(--bad-bg);border-left:3px solid var(--bad);border-radius:0 8px 8px 0;
+    padding:12px 16px;font-size:13px;color:#6d1a1d;margin:14px 0;}
+  .note b,.warn b,.bad b{font-weight:600;}
+  .lv{border:1px solid var(--line);border-radius:11px;padding:14px 16px;margin:10px 0;background:#fafbfc;}
+  .lv .lt{font-size:12px;font-weight:600;color:var(--accent);letter-spacing:.5px;margin-bottom:4px;}
+  .lv .ld{font-size:13px;color:var(--ink2);}
+  .lv .lc{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:#fff;
+    border:1px solid var(--line);border-radius:6px;padding:6px 10px;margin-top:6px;display:block;
+    white-space:pre-wrap;color:#1f5fa8;}
+  .chap{border-left:3px solid var(--line);padding:2px 0 2px 16px;margin:14px 0;}
+  .chap.c1{border-color:#378ADD;} .chap.c2{border-color:#1D9E75;}
+  .chap.c3{border-color:#BA7517;} .chap.c4{border-color:#534AB7;}
+  .chap .ct{font-size:13.5px;font-weight:600;margin-bottom:2px;}
+  .chap .cd{font-size:12.5px;color:var(--ink2);}
+  .chap .cf{font-size:12px;color:var(--ink3);margin-top:4px;}
+  .chartbox{border:1px solid var(--line);border-radius:11px;padding:14px 14px 6px;margin:14px 0;}
+  .chartbox .ct{font-size:13px;font-weight:600;margin-bottom:2px;}
+  .chartbox .cs{font-size:11.5px;color:var(--ink3);margin-bottom:8px;line-height:1.5;}
+  .chart{width:100%;height:300px;}
+  footer{margin-top:8px;padding:20px 30px;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;font-size:12.5px;color:var(--ink2);line-height:1.75;}
+  footer .src{color:var(--ink3);font-size:12px;margin-bottom:10px;}
+  @media(max-width:880px){
+    .wrap{padding:18px 14px 40px;}
+    section{padding:20px 18px;}
+    .tblwrap{overflow-x:auto;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <h1>标准研报框架 v1.0</h1>
+  <div class="sub">结构规范 · 章节顺序 · 层级关系 · 三类内容（个股研报 / 数据分析 / 监管监控信号）的应用方式</div>
+  <div class="meta">
+    基准文档：《大金重工（002487.SZ）投研团队联合尽调报告》&nbsp;·&nbsp;
+    提取骨架：Title + 5 条元信息块 + 12 个 H1 章节（2 个含 H2）+ 5 张核心表格&nbsp;·&nbsp;
+    制定日期 2026-10-08
+  </div>
+</header>
+
+<section>
+  <h2>零、框架来源与三条设计原则</h2>
+  <p class="lead">本框架不是凭空设计的，而是从基准文档里<b>反推</b>出来的：先提取它的结构骨架，再补上它没写但必须有的部分（如三类内容的差异化应用）。</p>
+
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:22%">原则</th><th style="width:78%">内容</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>① 保留原骨架</b></td>
+        <td>章节数量、顺序、命名风格、表格位置全部沿用基准文档。<b>不重新发明</b> —— 你已有的阅读习惯本身就是资产。</td>
+      </tr>
+      <tr>
+        <td><b>② 补齐必备性标注</b></td>
+        <td>原文档是单标的实例，无法回答"哪些章节可以省"。框架为每章标注 <span class="pill req">必需</span> <span class="pill core">核心</span> <span class="pill cond">条件</span> <span class="pill opt">可选</span>，让模板可裁剪。</td>
+      </tr>
+      <tr>
+        <td><b>③ 明确三类内容的差异</b></td>
+        <td>原文档只有"个股研报"一种形态。框架补上"数据分析"与"监管监控信号"两个变体的章节取舍与格式差异。</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note"><b>从基准文档中识别出的四个行文特征（需在模板中固化）：</b><br>
+  ① 章节编号用<b>中文数字</b>（一、二、三…），不用阿拉伯数字；<br>
+  ② H1 标题带<b>中英副标题</b>（如"执行摘要（Executive Summary）"），且部分章节名本身就是一个判断（如"二级市场投研：经营与市占率拆解"）；<br>
+  ③ 段落大量使用"<b>引导词：展开</b>"结构（核心矛盾：/ 结构亮点：/ 估值研判：/ 风险对冲：/ 核心发现：），引导词加粗；<br>
+  ④ 表格是<b>结论载体</b>而非数据附录 —— 每张表后必跟一段"研判"文字。</div>
+</section>
+
+<section>
+  <h2>一、层级体系<span class="tag">五级，互不混用</span></h2>
+  <p class="lead">基准文档实际使用了五级层次。框架把它显式化，避免"有时候用加粗当标题、有时候用编号当标题"的混乱。</p>
+
+  <div class="lv">
+    <div class="lt">L0 · 标题层</div>
+    <div class="ld">文档唯一标题。格式：<b>标的名称（代码）＋ 报告类型</b>。基准文档用的是"投研团队联合尽调报告"而非泛泛的"研究报告"——<b>报告类型要具体</b>。</div>
+    <span class="lc">大金重工（002487.SZ）投研团队联合尽调报告</span>
+  </div>
+
+  <div class="lv">
+    <div class="lt">L1 · 元信息块</div>
+    <div class="ld">紧接标题，<b>无标题的 5 条固定字段</b>，每条一段。基准文档的 5 条为：报告日期 / 标的 / 最新价 / 总市值 / 团队构成。<br>
+    <b>关键约定：</b>凡涉及价格与市值的字段，必须带<b>取数时点</b>（"2026年10月8日盘中"）与<b>计算口径</b>（"按A股价格×总股本7.38亿股估算"）。</div>
+    <span class="lc">报告日期：2026年10月8日
+标的：大金重工（002487.SZ，2026年6月5日H股挂牌，A+H双平台）
+最新价：A股约48.10元（2026年10月8日盘中，前收46.29元）；52周区间32.04—94.18元
+总市值：约355亿元（按A股价格×总股本7.38亿股估算，含H股1.0亿股）
+团队构成：二级市场投研 / 一级市场产业研究 / Risk Consulting / 海工产业链专研 / 战略分析</span>
+  </div>
+
+  <div class="lv">
+    <div class="lt">L2 · 章节层（H1）</div>
+    <div class="ld">中文数字编号 + 描述性标题，可带括号英文。共 12 章，顺序固定。</div>
+    <span class="lc">一、执行摘要（Executive Summary）
+二、一级市场投研：财务与估值透视
+四、风险控制（Risk Consulting）</span>
+  </div>
+
+  <div class="lv">
+    <div class="lt">L3 · 子章节层（H2）</div>
+    <div class="ld">阿拉伯数字编号 + 描述性标题。<b>编号在章内重新起算</b>（每章都从 1. 开始）。基准文档中仅第二、三、十一章使用。</div>
+    <span class="lc">1. 财务基本面：出口高毛利驱动的利润独立曲线
+2. 估值水平：成长性与安全边际</span>
+  </div>
+
+  <div class="lv">
+    <div class="lt">L4 · 要素层（段落引导词）</div>
+    <div class="ld"><b>不占标题层级</b>，是段落内的加粗引导词。这是基准文档最鲜明的行文特征，也是模板里最该保留的部分 —— 它让长段落变得可扫读。</div>
+    <span class="lc">**结构亮点：**2025年出口产品毛利贡献占比高达81.06%…
+**核心矛盾：**市场仍以'风电零部件制造商'框架为其定价…
+**风险对冲：**在手订单超100亿元集中在未来两年交付…</span>
+  </div>
+
+  <div class="lv">
+    <div class="lt">L5 · 列表层</div>
+    <div class="ld">三级符号体系，<b>按语义区分，不混用</b>：</div>
+    <span class="lc">（1）（2）（3）  → 业务/风险的分条展开
+■            → 具体业务分析（第八章专用）
+🔴🟡🟢        → 投资者分型（第十一章专用）
+第一环/第二环  → 产业链传导链条（第九章专用）</span>
+  </div>
+</section>
+
+<section>
+  <h2>二、章节顺序与必备性<span class="tag">12 章，顺序不可调</span></h2>
+  <div class="tblwrap">
+  <table>
+    <thead>
+      <tr>
+        <th style="width:5%">序</th><th style="width:24%">章节</th><th style="width:11%">必备性</th>
+        <th style="width:30%">承载的核心问题</th><th style="width:30%">必备要素</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>一</td><td><b>执行摘要</b><br><span style="color:var(--ink3);font-size:12px">（Executive Summary）</span></td>
+        <td><span class="pill req">必需</span></td>
+        <td>这家公司是什么？市场怎么误读它？什么时候是关键时点？</td>
+        <td>三段式：① 公司定位一句话 ② <b>核心矛盾</b>（市场认知 vs 实质）③ <b>关键时点</b></td>
+      </tr>
+      <tr>
+        <td>二</td><td><b>一级市场投研：<br>财务与估值透视</b></td>
+        <td><span class="pill req">必需</span></td>
+        <td>钱是怎么赚的？贵不贵？</td>
+        <td>H2×2（财务基本面 / 估值水平）+ 财务表（7×6）+ 估值表（6×3）+ 每表后研判</td>
+      </tr>
+      <tr>
+        <td>三</td><td><b>二级市场投研：<br>经营与市占率拆解</b></td>
+        <td><span class="pill req">必需</span></td>
+        <td>业务结构如何？在赛道里排第几？</td>
+        <td>H2×2（核心业务与市占率 / 经营隐忧）+ 分业务（1）（2）…</td>
+      </tr>
+      <tr>
+        <td>四</td><td><b>风险控制</b><br><span style="color:var(--ink3);font-size:12px">（Risk Consulting）</span></td>
+        <td><span class="pill req">必需</span></td>
+        <td>什么会让这个判断失效？</td>
+        <td>编号风险 3–5 条（<b>按严重度排序</b>，核心项标注）+ <b>风险对冲</b>段</td>
+      </tr>
+      <tr>
+        <td>五</td><td><b>长线投资者：<br>筹码结构与散户拥挤度</b></td>
+        <td><span class="pill req">必需</span></td>
+        <td>筹码在谁手里？散户是否过度拥挤？</td>
+        <td>股东户数变动（含时点序列）+ 机构持仓（含披露基准日）</td>
+      </tr>
+      <tr>
+        <td>六</td><td><b>团队综合研判</b></td>
+        <td><span class="pill req">必需</span></td>
+        <td>综合以上，结论是什么？</td>
+        <td>定位判断 + <b>核心结论</b>（应给出"不应再将其视为…而应视为…"的框架转换句）</td>
+      </tr>
+      <tr>
+        <td>七</td><td><b>估值、业绩增速、<br>机构持仓的横向对比</b></td>
+        <td><span class="pill req">必需</span></td>
+        <td>和竞对比，好在哪、贵在哪？</td>
+        <td>对比表（维度 × 本公司 + 2–3 家竞对）+ <b>核心发现</b>段</td>
+      </tr>
+      <tr>
+        <td>八</td><td><b>具体业务分析</b></td>
+        <td><span class="pill req">必需</span></td>
+        <td>每块业务单独看，逻辑成立吗？</td>
+        <td>■ 符号分块，每块含"业务定位 + 关键数据 + 战略含义"</td>
+      </tr>
+      <tr>
+        <td>九</td><td><b>产业链分析</b><br><span style="color:var(--ink3);font-size:12px">：A→B→C→D 传导链条</span></td>
+        <td><span class="pill cond">条件</span></td>
+        <td>上游变化如何传导到本公司？</td>
+        <td>链条环节分段（第一环 / 第二环…），每环给出传导机制</td>
+      </tr>
+      <tr>
+        <td>十</td><td><b>核心订单与交付推演</b></td>
+        <td><span class="pill cond">条件</span></td>
+        <td>未来业绩的时间表是什么？</td>
+        <td>推演表（时间节点 × 交付内容 × 业绩影响）</td>
+      </tr>
+      <tr>
+        <td>十一</td><td><b>持仓攻略：<br>策略建议与操作纪律</b></td>
+        <td><span class="pill req">必需</span></td>
+        <td>具体怎么操作？</td>
+        <td>当前定位 + 三档分型（🔴激进 / 🟡稳健 / 🟢保守）+ <b>核心跟踪指标清单表</b></td>
+      </tr>
+      <tr>
+        <td>十二</td><td><b>风险提示</b><br><span style="color:var(--ink3);font-size:12px">（必须牢记）</span></td>
+        <td><span class="pill req">必需</span></td>
+        <td>最坏情况下会怎样？</td>
+        <td>编号风险 3–5 条（<b>与第四章不重复</b>：四章讲风险机理，十二章讲后果）+ 免责声明固定文案</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="warn"><b>第四章与第十二章的区分（最容易写重的地方）：</b><br>
+  <b>第四章「风险控制」</b>讲风险的<b>机理与对冲</b> —— 为什么会有这个风险、公司如何应对、跟踪什么指标；<br>
+  <b>第十二章「风险提示」</b>讲风险的<b>后果清单</b> —— 一句话一条，用于最后收口。<br>
+  基准文档的写法是对的：第四章每条都带解释和对冲动作，第十二章是纯编号短句。</div>
+</section>
+
+<section>
+  <h2>三、五张核心表格的规范</h2>
+  <p class="lead">基准文档的表格不是数据附录，而是<b>结论载体</b>。每张表都有固定的列结构和位置。</p>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:6%">序</th><th style="width:20%">表格</th><th style="width:10%">位置</th><th style="width:16%">列结构</th><th style="width:48%">规范</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>T1</td><td><b>财务基本面表</b></td><td>第二章</td><td class="mono">指标 | 2024年 | 2025年 | 同比 | 2026年H1 | 同比</td>
+        <td>6 列固定。分期列必须<b>至少含最近一期与去年同期</b>；同比列紧跟其后。指标行建议 6–8 行</td>
+      </tr>
+      <tr>
+        <td>T2</td><td><b>估值水平表</b></td><td>第二章</td><td class="mono">估值指标 | 当前水平 | 备注</td>
+        <td>3 列。<b>"备注"列必须写明口径</b>（如"2027年一致预期"），否则数字无法追溯</td>
+      </tr>
+      <tr>
+        <td>T3</td><td><b>横向对比表</b></td><td>第七章</td><td class="mono">维度 | 本公司 | 竞对A | 竞对B | 其他</td>
+        <td>5 列。竞对 <b>2–3 家</b>；维度行建议 8–9 行，须覆盖市占率/毛利率/ROE/订单能见度</td>
+      </tr>
+      <tr>
+        <td>T4</td><td><b>订单交付推演表</b></td><td>第十章</td><td class="mono">时间节点 | 交付内容 | 业绩影响</td>
+        <td>3 列。时间节点须可核对（含具体年份或季度）</td>
+      </tr>
+      <tr>
+        <td>T5</td><td><b>核心跟踪指标清单</b></td><td>第十一章</td><td class="mono">跟踪维度 | 关键指标 | 观察窗口 | 达标信号</td>
+        <td><b>本框架最重要的一张表。</b>4 列全部必填 —— 缺"达标信号"列则指标无法执行</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note"><b>表格的三条铁律：</b><br>
+  ① 每张表后<b>必须跟一段"研判"文字</b>（基准文档用了"估值研判：""核心发现："），纯表格不给结论等于没写；<br>
+  ② 表格内的数字<b>必须可追溯到时点与口径</b>，跨期比较要标注是否同口径；<br>
+  ③ T5 的"达标信号"列是模板里唯一<b>直接对接监控系统</b>的字段 —— 它应当能被机器读取并自动判断。</div>
+</section>
+
+<section>
+  <h2>四、格式约定汇总</h2>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:18%">元素</th><th style="width:34%">约定</th><th style="width:48%">示例</th></tr></thead>
+    <tbody>
+      <tr><td>章节编号</td><td><b>中文数字</b> + 顿号</td><td class="mono">一、　二、　十一、　十二、</td></tr>
+      <tr><td>子章节编号</td><td><b>阿拉伯数字</b> + 英文句点，章内重新起算</td><td class="mono">1.　2.　3.</td></tr>
+      <tr><td>H1 副标题</td><td>中文标题（英文），英文可选</td><td class="mono">一、执行摘要（Executive Summary）</td></tr>
+      <tr><td>段落引导词</td><td><b>加粗 + 全角冒号</b>，段落内不换行</td><td class="mono">**核心矛盾：**市场仍以…</td></tr>
+      <tr><td>分条符号</td><td>（1）（2）用于业务与风险；■ 用于第八章；🔴🟡🟢 用于第十一章</td><td class="mono">（1）海工装备制造（基本盘，占营收94.5%）</td></tr>
+      <tr><td>关键数字</td><td>保留原始精度，<b>不四舍五入到"约"</b>；比率给到小数点后 1–2 位</td><td class="mono">出口毛利率由30.7%→37.0%→39.4%</td></tr>
+      <tr><td>价格字段</td><td><b>必须带取数时点</b>；区间用"—"连接</td><td class="mono">48.10元（2026年10月8日盘中）；52周区间32.04—94.18元</td></tr>
+      <tr><td>机构数据</td><td><b>必须带披露基准日</b></td><td class="mono">机构持仓（截至2026年6月30日十大流通股东）</td></tr>
+      <tr><td>预测数据</td><td>标注来源与年份口径</td><td class="mono">以2027年一致预期净利润中枢22亿元计</td></tr>
+      <tr><td>免责声明</td><td>固定文案，全文末尾</td><td class="mono">本报告基于公开信息整理分析，不构成投资建议…</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2>五、三类内容如何应用这个模板<span class="tag">核心</span></h2>
+  <p class="lead">同一套骨架，三类内容用不同的<b>章节子集</b>。差异不在格式，而在<b>保留哪些章节、替换哪些章节</b>。</p>
+
+  <h3>5.1 三个变体的定位</h3>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:16%">变体</th><th style="width:24%">回答的核心问题</th><th style="width:30%">章节策略</th><th style="width:30%">产出物</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>A · 个股研报</b></td>
+        <td>这家公司值不值得买？怎么操作？</td>
+        <td><b>全 12 章</b>，顺序不变</td>
+        <td>完整研报 + 三档操作建议</td>
+      </tr>
+      <tr>
+        <td><b>B · 数据分析</b></td>
+        <td>数据说明了什么？与同业比如何？</td>
+        <td>保留数据类章节，<b>删除策略类章节</b>（三/五/八/九/十/十一），第八章替换为数据口径说明</td>
+        <td>数据结论 + 口径说明，<b>不含操作建议</b></td>
+      </tr>
+      <tr>
+        <td><b>C · 监管监控信号</b></td>
+        <td>有什么变化需要我知道？触发什么响应？</td>
+        <td>保留一/四/六/十二，<b>把二/三/七/八/九/十整体替换为「监管与监控信号」章节</b>，第十一章改为「监控策略」</td>
+        <td>信号清单 + 触发条件 + 响应动作</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>5.2 章节取舍矩阵</h3>
+  <div class="tblwrap">
+  <table>
+    <thead>
+      <tr>
+        <th style="width:30%">章节</th>
+        <th style="width:17%">A · 个股研报</th>
+        <th style="width:17%">B · 数据分析</th>
+        <th style="width:36%">C · 监管监控信号</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>L0 标题 + L1 元信息块</td><td><span class="pill req">必需</span></td><td><span class="pill req">必需</span></td><td><span class="pill req">必需</span></td></tr>
+      <tr><td>一、执行摘要</td><td><span class="pill req">必需</span></td><td><span class="pill opt">简版</span></td><td><span class="pill req">必需</span><br><span style="font-size:12px">改为「信号摘要」</span></td></tr>
+      <tr><td>二、财务与估值透视</td><td><span class="pill req">必需</span></td><td><span class="pill core">核心</span></td><td><span class="pill na">不适用</span></td></tr>
+      <tr><td>三、经营与市占率拆解</td><td><span class="pill req">必需</span></td><td><span class="pill opt">可选</span></td><td><span class="pill na">不适用</span></td></tr>
+      <tr><td>四、风险控制</td><td><span class="pill req">必需</span></td><td><span class="pill opt">简版</span></td><td><span class="pill req">必需</span><br><span style="font-size:12px">改为「合规与监管风险」</span></td></tr>
+      <tr><td>五、筹码结构与散户拥挤度</td><td><span class="pill req">必需</span></td><td><span class="pill opt">可选</span></td><td><span class="pill opt">可选</span></td></tr>
+      <tr><td>六、团队综合研判</td><td><span class="pill req">必需</span></td><td><span class="pill na">不适用</span></td><td><span class="pill req">必需</span><br><span style="font-size:12px">改为「信号研判」</span></td></tr>
+      <tr><td>七、横向对比</td><td><span class="pill req">必需</span></td><td><span class="pill core">核心</span></td><td><span class="pill na">不适用</span></td></tr>
+      <tr><td>八、具体业务分析</td><td><span class="pill req">必需</span></td><td><span class="pill opt">可选</span></td><td><span class="pill na">不适用</span></td></tr>
+      <tr><td>九、产业链分析</td><td><span class="pill cond">条件</span></td><td><span class="pill opt">可选</span></td><td><span class="pill na">不适用</span></td></tr>
+      <tr><td>十、订单与交付推演</td><td><span class="pill cond">条件</span></td><td><span class="pill opt">可选</span></td><td><span class="pill na">不适用</span></td></tr>
+      <tr><td>十一、持仓攻略</td><td><span class="pill req">必需</span></td><td><span class="pill na">不适用</span></td><td><span class="pill req">必需</span><br><span style="font-size:12px">改为「监控策略」</span></td></tr>
+      <tr><td>十二、风险提示</td><td><span class="pill req">必需</span></td><td><span class="pill req">必需</span></td><td><span class="pill req">必需</span></td></tr>
+      <tr style="background:#faf9fd;">
+        <td><b>＋ 监管与监控信号</b><br><span style="color:var(--purple);font-size:12px">（本框架新增章节）</span></td>
+        <td><span class="pill opt">可选</span></td><td><span class="pill na">不适用</span></td>
+        <td><span class="pill new">核心</span></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="chartbox">
+    <div class="ct">三个变体的章节覆盖对比</div>
+    <div class="cs">横轴为 12 章 + 新增监管章节。可看出变体 A 覆盖最全，B 收敛到数据章节，C 把经营类章节整体替换为监管信号章节。</div>
+    <div id="chartCov" class="chart"></div>
+  </div>
+
+  <h3>5.3 变体 B · 数据分析 —— 具体约定</h3>
+  <div class="chap c2">
+    <div class="ct">保留章节</div>
+    <div class="cd">L0/L1 元信息块 · 二（财务与估值，升为核心）· 七（横向对比，升为核心）· 十二（风险提示）· 一（简版摘要）· 四（简版，只列数据质量风险）</div>
+    <div class="cf">删除：三、五、六、八、九、十、十一</div>
+  </div>
+  <div class="chap c2">
+    <div class="ct">格式差异</div>
+    <div class="cd">
+    · 元信息块新增第 6 条：<b>数据口径说明</b>（数据源、复权方式、币种、财年口径）；<br>
+    · 所有表格的"备注"列升为必填，用于标注口径；<br>
+    · 数字必须带<b>来源 + 时点</b>（如"2026H1 财报，披露日 2026-08-27"）；<br>
+    · <b>不写操作建议</b> —— 这是变体 B 与 A 最本质的区别。数据分析的产出是"数据说明了什么"，不是"该不该买"。</div>
+  </div>
+  <div class="bad"><b>变体 B 最容易犯的错：</b>在数据章节末尾悄悄加上"因此建议买入"。一旦出现操作建议，它就不再是数据分析，而是伪装成数据分析的研报 —— 而它恰恰缺少了研报必备的风险控制、筹码结构、业务拆解等章节。<b>要么补齐章节，要么删掉建议。</b></div>
+
+  <h3>5.4 变体 C · 监管监控信号 —— 具体约定</h3>
+  <div class="chap c4">
+    <div class="ct">新增章节：监管与监控信号</div>
+    <div class="cd">替代原第二、三、七、八、九、十章，位置放在执行摘要之后。内部含四个子块：</div>
+    <div class="cf">
+    <b>（1）监管政策信号</b> —— 政策变动、行业准入、补贴退坡、贸易壁垒；每条含：政策名称 / 发布机构 / 生效日 / 对公司的影响路径 / 影响量级估计<br>
+    <b>（2）公司公告信号</b> —— 定期报告、重大合同、股权变动、诉讼担保；每条含：公告类型 / 披露日 / 关键内容 / 是否构成实质变化<br>
+    <b>（3）交易异动信号</b> —— 涨跌停、龙虎榜、大宗交易、融资余额异动、股东户数突变；每条含：异动类型 / 发生时点 / 触发阈值 / 历史分位<br>
+    <b>（4）数据质量信号</b> —— 取数失败、字段口径变更、披露延迟；每条含：缺口字段 / 原因 / 影响范围 / 是否阻断决策
+    </div>
+  </div>
+  <div class="chap c4">
+    <div class="ct">第十一章改为「监控策略」</div>
+    <div class="cd">把"三档投资者分型"替换为"<b>信号分级与响应</b>"：<br>
+    · 🔴 立即响应（critical）—— 如停牌、监管处罚、财务造假指控<br>
+    · 🟡 进入观察（warning）—— 如财报临近、接近涨跌停、资金结构背离<br>
+    · 🟢 仅记录（info）—— 如阈值待校准、数据缺口<br>
+    T5 跟踪指标表保留，但"达标信号"列改为"<b>触发动作</b>"列。</div>
+  </div>
+  <div class="warn"><b>变体 C 的三条硬约束：</b><br>
+  ① 每条信号必须带<b>时点</b>与<b>时间窗</b> —— 无时间窗的信号无法排期执行；<br>
+  ② 每条信号必须对应<b>一个可执行动作</b>（进入观察 / 禁止加仓 / 暂缓建仓 / 减仓），不写"关注""留意"这类模糊词；<br>
+  ③ 信号与操作建议之间必须有<b>明确的优先级</b> —— 当多条信号冲突时听谁的，必须在模板里写死。</div>
+</section>
+
+<section>
+  <h2>六、模板使用方式</h2>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:20%">步骤</th><th style="width:80%">动作</th></tr></thead>
+    <tbody>
+      <tr><td><b>1 · 选变体</b></td><td>按目的选 A（个股研报）/ B（数据分析）/ C（监管监控信号）。<b>先定变体再动笔</b> —— 中途切换会导致章节取舍混乱。</td></tr>
+      <tr><td><b>2 · 填元信息块</b></td><td>5 条固定字段（B 变体加第 6 条数据口径）。<b>价格与市值必须带取数时点</b>。</td></tr>
+      <tr><td><b>3 · 按顺序写章节</b></td><td>章节顺序不可调。条件章节（九、十）无内容时整章删除，<b>不留空标题</b>。</td></tr>
+      <tr><td><b>4 · 填五张核心表</b></td><td>T1–T5 按变体取舍。每张表后必跟研判段。</td></tr>
+      <tr><td><b>5 · 写操作/监控章节</b></td><td>变体 A 写三档分型；变体 C 写信号分级与响应。</td></tr>
+      <tr><td><b>6 · 收口</b></td><td>第十二章编号风险 + 固定免责声明。</td></tr>
+      <tr><td><b>7 · 自检</b></td><td>见下方检查清单。</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>交付前自检清单</h3>
+  <div class="tblwrap">
+  <table>
+    <thead><tr><th style="width:8%">✓</th><th style="width:92%">检查项</th></tr></thead>
+    <tbody>
+      <tr><td>☐</td><td>所有价格、市值字段都带了<b>取数时点</b>，且时点在合理时效内</td></tr>
+      <tr><td>☐</td><td>所有机构数据都带了<b>披露基准日</b></td></tr>
+      <tr><td>☐</td><td>所有预测数据都标注了<b>来源与年份口径</b></td></tr>
+      <tr><td>☐</td><td>每张表格后都有<b>研判段</b>，不是纯表格</td></tr>
+      <tr><td>☐</td><td>第四章（风险机理）与第十二章（风险后果）<b>没有重复</b></td></tr>
+      <tr><td>☐</td><td>变体 B 中<b>没有出现操作建议</b></td></tr>
+      <tr><td>☐</td><td>变体 C 中每条信号都带<b>时点、时间窗、可执行动作</b></td></tr>
+      <tr><td>☐</td><td>章节编号为中文数字，子章节为阿拉伯数字，<b>两者未混用</b></td></tr>
+      <tr><td>☐</td><td>段落引导词加粗且用全角冒号，<b>格式统一</b></td></tr>
+      <tr><td>☐</td><td>条件章节无内容时<b>已整章删除</b>，未留空标题</td></tr>
+      <tr><td>☐</td><td>免责声明为固定文案，位于全文末尾</td></tr>
+      <tr><td>☐</td><td>全文数字<b>无自相矛盾</b>（同一指标在不同章节取值一致）</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<footer>
+  <div class="src">
+    框架来源：从《大金重工（002487.SZ）投研团队联合尽调报告》提取结构骨架（Title 1 个 / 元信息段 5 条 / H1 章节 12 个 / H2 子章节 3 个 / 核心表格 5 张），
+    经结构化解析工具读取原文，非凭印象归纳。<br>
+    基准文档的章节命名、编号风格、表格列结构、段落引导词写法均按原样保留；新增部分为"必备性标注""三类内容取舍矩阵""变体 B/C 的差异化约定"，用于把单标的实例扩展为可复用模板。<br>
+    本文档为研报撰写规范，不构成投资建议。文中引用的大金重工数据仅用于说明模板结构，其准确性与时效性以公司公告与原始披露为准。
+  </div>
+  <div>
+    <b>免责声明：</b>以上内容基于公开数据和量化分析，仅供参考，不构成投资建议。市场有风险，投资需谨慎。任何投资决策应结合个人风险承受能力、资金状况和投资目标独立判断，必要时咨询持牌专业机构。过往表现不预示未来收益。
+  </div>
+</footer>
+
+</div>
+
+<script>
+var chapters = ['执行摘要','财务与估值','经营与市占率','风险控制','筹码结构','综合研判','横向对比','具体业务','产业链','订单推演','持仓攻略','风险提示','监管与监控'];
+var vA = [1,1,1,1,1,1,1,1,1,1,1,1,0];
+var vB = [0.5,1,0.5,0.5,0.5,0,1,0.5,0.5,0.5,0,1,0];
+var vC = [1,0,0,1,0.5,1,0,0,0,0,1,1,1];
+
+echarts.init(document.getElementById('chartCov')).setOption({
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' },
+    formatter: function (ps) {
+      var s = ps[0].axisValue + '<br/>';
+      for (var i = 0; i < ps.length; i++) {
+        var v = ps[i].value;
+        var t = v === 1 ? '完整' : (v === 0.5 ? '简版/可选' : '不含');
+        s += ps[i].marker + ps[i].seriesName + ': ' + t + '<br/>';
+      }
+      return s;
+    }
+  },
+  legend: { data: ['A 个股研报', 'B 数据分析', 'C 监管监控信号'], bottom: 0, itemWidth: 12, itemHeight: 8, textStyle: { fontSize: 11 } },
+  grid: { left: 96, right: 24, top: 16, bottom: 56 },
+  xAxis: { type: 'value', max: 1, axisLabel: { fontSize: 10, formatter: function (v) { return v === 1 ? '完整' : (v === 0.5 ? '简版' : '不含'); } } },
+  yAxis: { type: 'category', data: chapters.slice().reverse(), axisLabel: { fontSize: 11 } },
+  series: [
+    { name: 'A 个股研报', type: 'bar', barWidth: 6, itemStyle: { color: '#378ADD', borderRadius: [0, 3, 3, 0] }, data: vA.slice().reverse() },
+    { name: 'B 数据分析', type: 'bar', barWidth: 6, itemStyle: { color: '#1D9E75', borderRadius: [0, 3, 3, 0] }, data: vB.slice().reverse() },
+    { name: 'C 监管监控信号', type: 'bar', barWidth: 6, itemStyle: { color: '#534AB7', borderRadius: [0, 3, 3, 0] }, data: vC.slice().reverse() }
+  ]
+});
+</script>
+</body>
+</html>
