@@ -3,80 +3,76 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="site.css">
 <title>A股 / 美股通用 · 选股研报模板库与指标字典</title>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
 <style>
-  :root{
-    --ink:#16181d; --ink2:#4a4f5a; --ink3:#828a97;
-    --line:#e3e6ec; --line2:#f0f2f6;
-    --bg:#f6f7f9; --card:#ffffff;
-    --up:#c0392b; --down:#1e8449;
-    --accent:#1f5fa8; --accent-bg:#eef4fb;
-    --warn:#a35b00; --warn-bg:#fdf5e6;
-  }
-  *{box-sizing:border-box;}
-  body{margin:0;background:var(--bg);color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
-    font-size:14px;line-height:1.72;-webkit-font-smoothing:antialiased;}
-  .wrap{max-width:1080px;margin:0 auto;padding:32px 24px 64px;}
-  header.top{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:28px 30px;margin-bottom:20px;}
+header.top{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:28px 30px;margin-bottom:20px;}
+
   header.top h1{margin:0 0 8px;font-size:23px;font-weight:600;letter-spacing:-.2px;}
+
   header.top .sub{color:var(--ink2);font-size:13.5px;margin-bottom:14px;}
+
   header.top .meta{color:var(--ink3);font-size:12.5px;border-top:1px solid var(--line2);padding-top:12px;}
-  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px;}
-  .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;}
+
   .kpi .n{font-size:22px;font-weight:600;line-height:1.3;color:var(--accent);}
+
   .kpi .l{font-size:12.5px;color:var(--ink3);margin-top:2px;}
-  section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:26px 30px;margin-bottom:20px;}
-  h2{font-size:17px;font-weight:600;margin:0 0 6px;letter-spacing:-.1px;}
+
   h2 .tag{font-size:11.5px;font-weight:500;color:var(--accent);background:var(--accent-bg);
     border-radius:5px;padding:2px 7px;margin-left:8px;vertical-align:2px;}
-  h3{font-size:14.5px;font-weight:600;margin:22px 0 10px;color:var(--ink);}
-  h3:first-of-type{margin-top:14px;}
-  p{margin:8px 0;}
-  .lead{color:var(--ink2);font-size:13.5px;margin-bottom:14px;}
-  table{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0;}
-  th{background:#fafbfc;color:var(--ink2);font-weight:600;text-align:left;
-    padding:9px 11px;border-bottom:1.5px solid var(--line);font-size:12.5px;white-space:nowrap;}
-  td{padding:9px 11px;border-bottom:1px solid var(--line2);vertical-align:top;}
-  tr:last-child td{border-bottom:none;}
+
   td.mono,th.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--accent);}
-  .up{color:var(--up);font-weight:600;}
-  .down{color:var(--down);font-weight:600;}
-  .pill{display:inline-block;font-size:11.5px;padding:1px 7px;border-radius:5px;line-height:1.6;white-space:nowrap;}
+
   .pill.auto{background:#eaf5ee;color:#1e6b3f;}
+
   .pill.manual{background:#f4f1ea;color:#8a6a1f;}
+
   .pill.both{background:var(--accent-bg);color:var(--accent);}
+
   .layers{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:14px 0 6px;}
+
   .layer{border:1px solid var(--line);border-radius:11px;padding:15px 16px;}
+
   .layer.l1{background:#eef4fb;border-color:#c9dcf2;}
+
   .layer.l2{background:#f2f7f2;border-color:#cfe3cf;}
+
   .layer.l3{background:#fbf5ee;border-color:#eeddc6;}
+
   .layer .t{font-weight:600;font-size:13.5px;margin-bottom:4px;}
+
   .layer .d{font-size:12.5px;color:var(--ink2);line-height:1.65;}
+
   .layer.l1 .t{color:#1f5fa8;}
+
   .layer.l2 .t{color:#256b3d;}
+
   .layer.l3 .t{color:#9a5b12;}
-  .note{background:var(--accent-bg);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;
-    padding:12px 16px;font-size:13px;color:#1c3d63;margin:14px 0;}
-  .warn{background:var(--warn-bg);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;
-    padding:12px 16px;font-size:13px;color:#6b3d00;margin:14px 0;}
+
   .warn b,.note b{font-weight:600;}
+
   .charts{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:14px 0;}
-  .chartbox{border:1px solid var(--line);border-radius:11px;padding:14px 14px 6px;}
+
   .chartbox .ct{font-size:13px;font-weight:600;margin-bottom:2px;}
+
   .chartbox .cs{font-size:11.5px;color:var(--ink3);margin-bottom:8px;line-height:1.5;}
-  .chart{width:100%;height:280px;}
+
   .flow{display:flex;align-items:stretch;gap:0;margin:16px 0;flex-wrap:wrap;}
+
   .step{flex:1;min-width:120px;border:1px solid var(--line);border-radius:10px;
     padding:12px 13px;background:#fafbfc;}
+
   .step .sn{font-size:11px;color:var(--ink3);font-weight:600;letter-spacing:.4px;}
+
   .step .st{font-size:13px;font-weight:600;margin:3px 0 3px;}
+
   .step .sd{font-size:11.5px;color:var(--ink2);line-height:1.55;}
+
   .arrow{display:flex;align-items:center;padding:0 7px;color:var(--ink3);font-size:15px;}
-  footer{margin-top:8px;padding:20px 30px;background:var(--card);border:1px solid var(--line);
-    border-radius:14px;font-size:12.5px;color:var(--ink2);line-height:1.75;}
+
   footer .src{color:var(--ink3);font-size:12px;margin-bottom:10px;}
+
   @media(max-width:860px){
     .kpis{grid-template-columns:repeat(2,1fr);}
     .layers{grid-template-columns:1fr;}
@@ -90,6 +86,20 @@
 </style>
 </head>
 <body>
+<header class="topnav">
+  <a class="brand" href="index.html"><span class="dot"></span>量化投研系统</a>
+  <nav class="links">
+    <a class="nav" href="index.html">总览</a>
+    <a class="nav" href="demo.html">交互演示</a>
+    <a class="nav" href="framework.html">研报框架</a>
+    <a class="nav active" href="templates.html">模板库</a>
+    <a class="nav" href="plan.html">推进方案</a>
+    <a class="nav" href="review.html">方案复审</a>
+    <a class="nav" href="stack.html">技术选型</a>
+    <a class="nav" href="data-fix.html">数据纠错</a>
+  </nav>
+</header>
+
 <div class="wrap">
 
 <header class="top">
