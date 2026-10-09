@@ -3,74 +3,37 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="site.css">
 <title>A股/美股量化投研系统 · 项目总览</title>
 <style>
-  :root{
-    --ink:#16181d; --ink2:#4a4f5a; --ink3:#828a97;
-    --line:#e3e6ec; --line2:#f0f2f6;
-    --bg:#f6f7f9; --card:#ffffff;
-    --accent:#1f5fa8; --accent-bg:#eef4fb;
-    --ok:#1e6b3f; --ok-bg:#eaf5ee;
-    --warn:#a35b00; --warn-bg:#fdf5e6;
-    --purple:#534AB7; --purple-bg:#efedfb;
-  }
-  *{box-sizing:border-box;}
-  body{margin:0;background:var(--bg);color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
-    font-size:14px;line-height:1.72;-webkit-font-smoothing:antialiased;}
-  a{color:var(--accent);text-decoration:none;}
-  .wrap{max-width:1100px;margin:0 auto;padding:40px 24px 72px;}
-  header{background:var(--card);border:1px solid var(--line);border-radius:16px;
-    padding:34px 36px;margin-bottom:22px;}
-  header h1{margin:0 0 10px;font-size:26px;font-weight:600;letter-spacing:-.3px;}
-  header .sub{color:var(--ink2);font-size:14px;margin-bottom:18px;}
+header .sub{color:var(--ink2);font-size:14px;margin-bottom:18px;}
+
   header .meta{color:var(--ink3);font-size:12.5px;border-top:1px solid var(--line2);padding-top:14px;}
-  .cta{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:#fff;
-    padding:11px 22px;border-radius:9px;font-size:14px;font-weight:600;margin-top:16px;}
-  .cta:hover{background:#1a4f8f;text-decoration:none;}
+
   .cta.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent);margin-left:10px;}
 
-  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px;}
-  .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;}
   .kpi .n{font-size:23px;font-weight:600;line-height:1.25;color:var(--accent);}
+
   .kpi .l{font-size:12.5px;color:var(--ink3);margin-top:2px;}
 
-  section{background:var(--card);border:1px solid var(--line);border-radius:14px;
-    padding:26px 30px;margin-bottom:20px;}
-  h2{font-size:17px;font-weight:600;margin:0 0 6px;letter-spacing:-.1px;}
   h2 .tag{font-size:11.5px;font-weight:500;color:var(--accent);background:var(--accent-bg);
     border-radius:5px;padding:2px 7px;margin-left:8px;vertical-align:2px;}
-  p{margin:8px 0;color:var(--ink2);}
-  .lead{font-size:13.5px;margin-bottom:14px;}
 
-  .cards{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:16px;}
-  .card{border:1px solid var(--line);border-radius:12px;padding:18px 20px;background:#fafbfc;
-    display:block;transition:border-color .15s,background .15s;}
-  .card:hover{border-color:var(--accent);background:var(--accent-bg);text-decoration:none;}
   .card .ct{font-size:14.5px;font-weight:600;color:var(--ink);margin-bottom:5px;}
+
   .card .cd{font-size:12.5px;color:var(--ink2);line-height:1.6;}
+
   .card .badge{display:inline-block;font-size:11px;padding:1px 7px;border-radius:5px;
     background:var(--accent-bg);color:var(--accent);margin-left:8px;font-weight:500;}
+
   .card.hl{border-color:var(--accent);border-width:2px;background:#f7fafd;}
 
-  table{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0;}
-  th{background:#fafbfc;color:var(--ink2);font-weight:600;text-align:left;
-    padding:9px 11px;border-bottom:1.5px solid var(--line);font-size:12.5px;}
-  td{padding:9px 11px;border-bottom:1px solid var(--line2);vertical-align:top;}
-  tr:last-child td{border-bottom:none;}
-  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;
-    background:var(--line2);padding:1px 5px;border-radius:4px;color:var(--ink);}
-  pre{background:#1c1f26;color:#e6e8ec;border-radius:10px;padding:16px 18px;overflow-x:auto;
-    font-size:12px;line-height:1.65;font-family:ui-monospace,Menlo,monospace;margin:12px 0;}
   pre .c{color:#828a97;}
+
   pre .g{color:#97C459;}
-  .note{background:var(--accent-bg);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;
-    padding:12px 16px;font-size:13px;color:#1c3d63;margin:14px 0;}
-  .warn{background:var(--warn-bg);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;
-    padding:12px 16px;font-size:13px;color:#6b3d00;margin:14px 0;}
+
   .note b,.warn b{font-weight:600;}
-  footer{padding:20px 30px;background:var(--card);border:1px solid var(--line);
-    border-radius:14px;font-size:12px;color:var(--ink3);line-height:1.75;}
+
   @media(max-width:820px){
     .kpis{grid-template-columns:repeat(2,1fr);}
     .cards{grid-template-columns:1fr;}
@@ -80,6 +43,20 @@
 </style>
 </head>
 <body>
+<header class="topnav">
+  <a class="brand" href="index.html"><span class="dot"></span>量化投研系统</a>
+  <nav class="links">
+    <a class="nav active" href="index.html">总览</a>
+    <a class="nav" href="demo.html">交互演示</a>
+    <a class="nav" href="framework.html">研报框架</a>
+    <a class="nav" href="templates.html">模板库</a>
+    <a class="nav" href="plan.html">推进方案</a>
+    <a class="nav" href="review.html">方案复审</a>
+    <a class="nav" href="stack.html">技术选型</a>
+    <a class="nav" href="data-fix.html">数据纠错</a>
+  </nav>
+</header>
+
 <div class="wrap">
 
 <header>
