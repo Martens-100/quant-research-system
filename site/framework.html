@@ -3,78 +3,67 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="site.css">
 <title>标准研报框架 v1.0 · 结构规范与三类内容应用</title>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
 <style>
-  :root{
-    --ink:#16181d; --ink2:#4a4f5a; --ink3:#828a97;
-    --line:#e3e6ec; --line2:#f0f2f6;
-    --bg:#f6f7f9; --card:#ffffff;
-    --accent:#1f5fa8; --accent-bg:#eef4fb;
-    --warn:#a35b00; --warn-bg:#fdf5e6;
-    --bad:#a3272b; --bad-bg:#fdeeee;
-    --ok:#1e6b3f; --ok-bg:#eaf5ee;
-    --purple:#534AB7; --purple-bg:#efedfb;
-  }
-  *{box-sizing:border-box;}
-  body{margin:0;background:var(--bg);color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
-    font-size:14px;line-height:1.72;-webkit-font-smoothing:antialiased;}
-  .wrap{max-width:1100px;margin:0 auto;padding:32px 24px 64px;}
-  header.top{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:28px 30px;margin-bottom:20px;}
+header.top{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:28px 30px;margin-bottom:20px;}
+
   header.top h1{margin:0 0 8px;font-size:23px;font-weight:600;letter-spacing:-.2px;}
+
   header.top .sub{color:var(--ink2);font-size:13.5px;margin-bottom:14px;}
+
   header.top .meta{color:var(--ink3);font-size:12.5px;border-top:1px solid var(--line2);padding-top:12px;}
-  section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:26px 30px;margin-bottom:20px;}
-  h2{font-size:17px;font-weight:600;margin:0 0 6px;letter-spacing:-.1px;}
+
   h2 .tag{font-size:11.5px;font-weight:500;color:var(--accent);background:var(--accent-bg);
     border-radius:5px;padding:2px 7px;margin-left:8px;vertical-align:2px;}
-  h3{font-size:14.5px;font-weight:600;margin:22px 0 10px;}
-  h3:first-of-type{margin-top:14px;}
-  p{margin:8px 0;}
-  .lead{color:var(--ink2);font-size:13.5px;margin-bottom:14px;}
-  ul,ol{margin:8px 0;padding-left:22px;}
-  li{margin:5px 0;}
-  table{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0;}
-  th{background:#fafbfc;color:var(--ink2);font-weight:600;text-align:left;
-    padding:9px 11px;border-bottom:1.5px solid var(--line);font-size:12.5px;white-space:nowrap;}
-  td{padding:9px 11px;border-bottom:1px solid var(--line2);vertical-align:top;}
-  tr:last-child td{border-bottom:none;}
+
   td.mono,th.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;}
-  .v{font-weight:600;}
-  .pill{display:inline-block;font-size:11.5px;padding:1px 7px;border-radius:5px;line-height:1.6;white-space:nowrap;}
+
   .pill.req{background:var(--bad-bg);color:var(--bad);}
+
   .pill.core{background:var(--ok-bg);color:var(--ok);}
+
   .pill.opt{background:#f1f0ea;color:#5F5E5A;}
+
   .pill.cond{background:var(--warn-bg);color:var(--warn);}
+
   .pill.na{background:#f6f7f9;color:var(--ink3);}
+
   .pill.new{background:var(--purple-bg);color:var(--purple);}
-  .note{background:var(--accent-bg);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;
-    padding:12px 16px;font-size:13px;color:#1c3d63;margin:14px 0;}
-  .warn{background:var(--warn-bg);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;
-    padding:12px 16px;font-size:13px;color:#6b3d00;margin:14px 0;}
-  .bad{background:var(--bad-bg);border-left:3px solid var(--bad);border-radius:0 8px 8px 0;
-    padding:12px 16px;font-size:13px;color:#6d1a1d;margin:14px 0;}
+
   .note b,.warn b,.bad b{font-weight:600;}
+
   .lv{border:1px solid var(--line);border-radius:11px;padding:14px 16px;margin:10px 0;background:#fafbfc;}
+
   .lv .lt{font-size:12px;font-weight:600;color:var(--accent);letter-spacing:.5px;margin-bottom:4px;}
+
   .lv .ld{font-size:13px;color:var(--ink2);}
+
   .lv .lc{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:#fff;
     border:1px solid var(--line);border-radius:6px;padding:6px 10px;margin-top:6px;display:block;
     white-space:pre-wrap;color:#1f5fa8;}
+
   .chap{border-left:3px solid var(--line);padding:2px 0 2px 16px;margin:14px 0;}
-  .chap.c1{border-color:#378ADD;} .chap.c2{border-color:#1D9E75;}
-  .chap.c3{border-color:#BA7517;} .chap.c4{border-color:#534AB7;}
+
+  .chap.c1{border-color:#378ADD;}
+ .chap.c2{border-color:#1D9E75;}
+
+  .chap.c3{border-color:#BA7517;}
+ .chap.c4{border-color:#534AB7;}
+
   .chap .ct{font-size:13.5px;font-weight:600;margin-bottom:2px;}
+
   .chap .cd{font-size:12.5px;color:var(--ink2);}
+
   .chap .cf{font-size:12px;color:var(--ink3);margin-top:4px;}
-  .chartbox{border:1px solid var(--line);border-radius:11px;padding:14px 14px 6px;margin:14px 0;}
+
   .chartbox .ct{font-size:13px;font-weight:600;margin-bottom:2px;}
+
   .chartbox .cs{font-size:11.5px;color:var(--ink3);margin-bottom:8px;line-height:1.5;}
-  .chart{width:100%;height:300px;}
-  footer{margin-top:8px;padding:20px 30px;background:var(--card);border:1px solid var(--line);
-    border-radius:14px;font-size:12.5px;color:var(--ink2);line-height:1.75;}
+
   footer .src{color:var(--ink3);font-size:12px;margin-bottom:10px;}
+
   @media(max-width:880px){
     .wrap{padding:18px 14px 40px;}
     section{padding:20px 18px;}
@@ -83,6 +72,20 @@
 </style>
 </head>
 <body>
+<header class="topnav">
+  <a class="brand" href="index.html"><span class="dot"></span>量化投研系统</a>
+  <nav class="links">
+    <a class="nav" href="index.html">总览</a>
+    <a class="nav" href="demo.html">交互演示</a>
+    <a class="nav active" href="framework.html">研报框架</a>
+    <a class="nav" href="templates.html">模板库</a>
+    <a class="nav" href="plan.html">推进方案</a>
+    <a class="nav" href="review.html">方案复审</a>
+    <a class="nav" href="stack.html">技术选型</a>
+    <a class="nav" href="data-fix.html">数据纠错</a>
+  </nav>
+</header>
+
 <div class="wrap">
 
 <header class="top">
